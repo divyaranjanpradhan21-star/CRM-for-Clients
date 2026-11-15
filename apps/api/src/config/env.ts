@@ -20,6 +20,8 @@ const schema = z.object({
   SMTP_FROM: z.string().optional(),
   WHATSAPP_PHONE_NUMBER_ID: z.string().optional(),
   WHATSAPP_ACCESS_TOKEN: z.string().optional(),
+  SUPABASE_URL: z.string().optional(),
+  SUPABASE_ANON_KEY: z.string().optional(),
 });
 
 const parsed = schema.safeParse(process.env);
