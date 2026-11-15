@@ -21,6 +21,7 @@
   "dependencies": {
     "@crm/shared": "*",
     "@prisma/client": "^5.22.0",
+    "@types/node": "^22.9.0",
     "argon2": "^0.41.1",
     "compression": "^1.7.4",
     "cookie-parser": "^1.4.6",

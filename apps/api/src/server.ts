@@ -1,3 +1,4 @@
+import process from 'node:process';
 import { env } from './config/env';
 import { createApp } from './app';
 import { prisma } from './lib/prisma';
@@ -12,7 +13,11 @@ async function shutdown(signal: string) {
     await prisma.$disconnect();
     process.exit(0);
   });
-  setTimeout(() => process.exit(1), 10_000).unref();
+  const timer = setTimeout(() => process.exit(1), 10_000);
+  if (typeof (timer as any)?.unref === 'function') {
+    (timer as any).unref();
+  }
 }
 process.on('SIGTERM', () => shutdown('SIGTERM'));
 process.on('SIGINT', () => shutdown('SIGINT'));
+

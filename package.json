@@ -16,6 +16,9 @@
   "prisma": {
     "schema": "apps/api/prisma/schema.prisma"
   },
+  "dependencies": {
+    "@types/node": "^22.9.0"
+  },
   "devDependencies": {
     "@types/node": "^22.9.0"
   }
