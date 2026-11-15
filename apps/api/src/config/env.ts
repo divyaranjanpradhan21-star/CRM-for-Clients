@@ -1,5 +1,12 @@
-import 'dotenv/config';
+import path from 'node:path';
+import dotenv from 'dotenv';
 import { z } from 'zod';
+
+// Load .env from cwd, apps/api, or monorepo root
+dotenv.config();
+dotenv.config({ path: path.resolve(process.cwd(), 'apps/api/.env') });
+dotenv.config({ path: path.resolve(__dirname, '../../../apps/api/.env') });
+dotenv.config({ path: path.resolve(__dirname, '../../.env') });
 
 const schema = z.object({
   NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
