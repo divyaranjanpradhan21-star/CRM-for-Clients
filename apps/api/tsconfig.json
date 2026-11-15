@@ -2,7 +2,6 @@
   "compilerOptions": {
     "target": "ES2022",
     "module": "CommonJS",
-    "types": ["node"],
     "outDir": "dist",
     "rootDir": ".",
     "strict": true,
@@ -13,5 +12,6 @@
   },
   "include": ["src", "prisma/seed.ts"]
 }
+
 
 
