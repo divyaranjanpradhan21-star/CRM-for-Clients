@@ -6,14 +6,19 @@
   "scripts": {
     "dev:api": "npm run dev -w @crm/api",
     "start:api": "npm run start -w @crm/api",
-    "build": "npm run build -w @crm/shared && npm run prisma:generate -w @crm/api && npm run build -w @crm/api",
+    "build": "npm run build -w @crm/shared && npm run build -w @crm/api",
+    "prisma:generate": "prisma generate --schema=apps/api/prisma/schema.prisma",
     "db:up": "docker compose up -d",
     "db:migrate": "npm run prisma:migrate -w @crm/api",
     "db:seed": "npm run prisma:seed -w @crm/api",
     "test": "npm test -w @crm/api"
   },
+  "prisma": {
+    "schema": "apps/api/prisma/schema.prisma"
+  },
   "devDependencies": {
     "@types/node": "^22.9.0"
   }
 }
+
 
