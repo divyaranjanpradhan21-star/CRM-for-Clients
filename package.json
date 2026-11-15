@@ -5,8 +5,12 @@
   "workspaces": ["apps/*", "packages/*"],
   "scripts": {
     "dev:api": "npm run dev -w @crm/api",
+    "dev:web": "npm run dev -w @crm/web",
+    "dev": "npm run dev -w @crm/web",
     "start:api": "npm run start -w @crm/api",
-    "build": "npm run build -w @crm/shared && npm run build -w @crm/api",
+    "start:web": "npm run preview -w @crm/web",
+    "build:web": "npm run build -w @crm/web",
+    "build": "npm run build -w @crm/shared && npm run build -w @crm/api && npm run build -w @crm/web",
     "prisma:generate": "prisma generate --schema=apps/api/prisma/schema.prisma",
     "db:up": "docker compose up -d",
     "db:migrate": "npm run prisma:migrate -w @crm/api",
