@@ -4,9 +4,10 @@
  *  - DEMO ONLY (skipped when SEED_DEMO=false): a "Demo Company" org with default roles,
  *    lead statuses/sources/categories and a default pipeline. Contains no fake leads/clients.
  */
+import process from 'node:process';
 import 'dotenv/config';
 import argon2 from 'argon2';
-import { PrismaClient, PermissionAction, PermissionScope } from '@prisma/client';
+import { PrismaClient, PermissionAction, PermissionScope, Permission } from '@prisma/client';
 import { MODULES, ACTIONS } from '@crm/shared';
 
 const prisma = new PrismaClient();
@@ -105,7 +106,7 @@ async function seedSuperAdmin() {
   });
   const perms = await prisma.permission.findMany();
   await prisma.rolePermission.createMany({
-    data: perms.map((p) => ({ roleId: role!.id, permissionId: p.id, scope: 'ALL' as const })),
+    data: perms.map((p: Permission) => ({ roleId: role!.id, permissionId: p.id, scope: 'ALL' as const })),
     skipDuplicates: true,
   });
   const email = (process.env.SEED_ADMIN_EMAIL ?? 'superadmin@example.com').toLowerCase();
@@ -136,7 +137,7 @@ async function seedDemoOrg() {
     for (const [module, actions, scope] of r.grants) {
       const perms = await prisma.permission.findMany({ where: { module, action: { in: actions } } });
       await prisma.rolePermission.createMany({
-        data: perms.map((p) => ({ roleId: role.id, permissionId: p.id, scope })),
+        data: perms.map((p: Permission) => ({ roleId: role.id, permissionId: p.id, scope })),
         skipDuplicates: true,
       });
     }
