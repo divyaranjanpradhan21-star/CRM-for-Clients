@@ -433,8 +433,8 @@ export const UnifiedLoginPage: React.FC = () => {
           A GREAT MORNING<br />STARTS WITH
         </h1>
 
-        {/* Iced Coffee drink hero image (cutout PNG with dynamic splash & beans) */}
-        <div className="mt-4 flex items-end justify-center" style={{ height: 'clamp(210px, 34vh, 380px)' }}>
+        {/* Iced Coffee drink hero image (cutout PNG with dynamic splash & beans - enlarged hero size) */}
+        <div className="mt-2 flex items-end justify-center" style={{ height: 'clamp(280px, 48vh, 520px)' }}>
           <img
             src="/hero-coffee.png"
             alt="Cafe's Corner Iced Coffee"
@@ -442,7 +442,7 @@ export const UnifiedLoginPage: React.FC = () => {
               height: '100%',
               width: 'auto',
               objectFit: 'contain',
-              filter: 'drop-shadow(0 16px 36px rgba(100,60,20,0.22))',
+              filter: 'drop-shadow(0 20px 45px rgba(100,60,20,0.28))',
             }}
             onError={(e) => {
               // fallback if image not found
