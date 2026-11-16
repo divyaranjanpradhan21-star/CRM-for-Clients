@@ -87,15 +87,15 @@ export const UnifiedLoginPage: React.FC = () => {
 
           {/* Decorative artistic Coffee Cup badge in bottom corner */}
           <div className="relative z-10 bg-black/60 backdrop-blur-md border border-white/20 rounded-2xl p-4 text-white max-w-xs shadow-xl">
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-3.5">
               <img
                 src="/logo.png"
                 alt="Cafe's Corner Logo"
-                className="w-14 h-14 object-contain filter drop-shadow-md"
+                className="w-16 h-16 object-contain filter drop-shadow-lg"
               />
               <div>
-                <h2 className="text-sm font-bold tracking-tight text-white leading-tight">Cafe's Corner</h2>
-                <p className="text-[11px] text-amber-200/90 font-medium">Coffee Shop CRM System</p>
+                <h2 className="text-base font-bold tracking-tight text-white leading-tight">Cafe's Corner</h2>
+                <p className="text-xs text-amber-200/90 font-medium">Coffee Shop CRM System</p>
               </div>
             </div>
             <p className="text-[11px] text-white/80 mt-2 leading-relaxed">
@@ -108,18 +108,18 @@ export const UnifiedLoginPage: React.FC = () => {
         <div className="w-full md:w-1/2 bg-[#212226] p-8 sm:p-12 lg:p-14 flex flex-col justify-between">
           <div className="max-w-md w-full mx-auto">
             {/* Logo matching Cafe's Corner Stamp Emblem */}
-            <div className="flex flex-col items-center mb-6 text-center">
-              <div className="w-24 h-24 mb-2 flex items-center justify-center hover:scale-105 transition-transform">
+            <div className="flex flex-col items-center mb-5 text-center">
+              <div className="w-32 h-32 mb-2 flex items-center justify-center hover:scale-105 transition-transform">
                 <img
                   src="/logo.png"
                   alt="Cafe's Corner"
                   className="w-full h-full object-contain filter drop-shadow-2xl"
                 />
               </div>
-              <div className="text-lg font-extrabold tracking-tight text-white flex items-center gap-1.5">
+              <div className="text-xl font-extrabold tracking-tight text-white flex items-center gap-1.5">
                 Cafe's <span className="text-amber-400">Corner</span>
               </div>
-              <span className="text-[10px] uppercase font-mono tracking-widest text-amber-200/70 font-semibold mt-0.5">
+              <span className="text-[11px] uppercase font-mono tracking-widest text-amber-200/80 font-semibold mt-0.5">
                 Coffee Shop
               </span>
             </div>
