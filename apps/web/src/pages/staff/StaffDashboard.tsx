@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { SEOHead } from '../../components/SEOHead';
+import { clearCurrentSession } from '../../lib/auth';
+import { supabase } from '../../lib/supabase';
 import {
   Utensils,
   Clock,
@@ -20,9 +22,13 @@ export const StaffDashboard: React.FC = () => {
   const navigate = useNavigate();
   const [activeShiftFilter, setActiveShiftFilter] = useState('morning');
 
-  const handleLogout = () => {
-    localStorage.removeItem('portal_role');
-    localStorage.removeItem('user_email');
+  const handleLogout = async () => {
+    try {
+      await supabase.auth.signOut();
+    } catch {
+      // ignore
+    }
+    clearCurrentSession();
     navigate('/login');
   };
 
