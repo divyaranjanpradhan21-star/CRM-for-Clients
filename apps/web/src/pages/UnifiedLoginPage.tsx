@@ -461,11 +461,15 @@ export const UnifiedLoginPage: React.FC = () => {
         </div>
       </footer>
 
-      {/* ── Login Form Overlay (centered, dark card) ── */}
+      {/* ── Login Form Overlay (centered, frosted glass transparent card) ── */}
       <div className="absolute inset-0 z-20 flex items-center justify-center p-4">
         <div
-          className="w-full max-w-sm rounded-3xl shadow-2xl overflow-hidden"
-          style={{ backgroundColor: '#1c1d20', border: '1px solid rgba(255,255,255,0.07)' }}
+          className="w-full max-w-sm rounded-3xl overflow-hidden backdrop-blur-xl transition-all duration-300"
+          style={{
+            backgroundColor: 'rgba(24, 25, 28, 0.45)',
+            border: '1px solid rgba(255, 255, 255, 0.18)',
+            boxShadow: '0 25px 60px -12px rgba(0, 0, 0, 0.5), inset 0 1px 1px rgba(255, 255, 255, 0.25)',
+          }}
         >
           <div className="p-8">
             {/* Logo & Brand */}
@@ -475,21 +479,27 @@ export const UnifiedLoginPage: React.FC = () => {
                   src="/logo.png"
                   alt="Cafe's Corner"
                   className="w-full h-full object-contain"
-                  style={{ filter: 'drop-shadow(0 4px 16px rgba(0,0,0,0.5))' }}
+                  style={{ filter: 'drop-shadow(0 4px 16px rgba(0,0,0,0.6))' }}
                 />
               </div>
-              <div className="text-lg font-extrabold tracking-tight text-white flex items-center gap-1">
+              <div className="text-lg font-extrabold tracking-tight text-white flex items-center gap-1 drop-shadow-sm">
                 Cafe's <span style={{ color: '#f59e0b' }}>Corner</span>
               </div>
-              <span className="text-[10px] uppercase font-mono tracking-widest font-semibold mt-0.5" style={{ color: 'rgba(251,191,36,0.8)' }}>
+              <span className="text-[10px] uppercase font-mono tracking-widest font-semibold mt-0.5" style={{ color: 'rgba(251,191,36,0.9)' }}>
                 Coffee Shop
               </span>
             </div>
 
             {/* Quick Role Fill Pills (LOGIN step only) */}
             {step === 'LOGIN' && (
-              <div className="mb-5 p-2 rounded-2xl flex items-center justify-between text-xs" style={{ backgroundColor: '#1b1c20', border: '1px solid rgba(255,255,255,0.05)' }}>
-                <span className="text-[11px] font-semibold px-2" style={{ color: '#9ca3af' }}>Role:</span>
+              <div
+                className="mb-5 p-1.5 rounded-2xl flex items-center justify-between text-xs backdrop-blur-md"
+                style={{
+                  backgroundColor: 'rgba(0, 0, 0, 0.3)',
+                  border: '1px solid rgba(255, 255, 255, 0.12)',
+                }}
+              >
+                <span className="text-[11px] font-semibold px-2" style={{ color: '#d1d5db' }}>Role:</span>
                 <div className="flex gap-1.5">
                   <button
                     type="button"
@@ -497,7 +507,7 @@ export const UnifiedLoginPage: React.FC = () => {
                     className={`px-2.5 py-1 rounded-xl text-[11px] font-bold transition ${
                       email.includes('superadmin')
                         ? 'bg-amber-500 text-black shadow'
-                        : 'text-gray-400 hover:text-white hover:bg-white/5'
+                        : 'text-gray-300 hover:text-white hover:bg-white/10'
                     }`}
                   >
                     Super Admin
@@ -508,7 +518,7 @@ export const UnifiedLoginPage: React.FC = () => {
                     className={`px-2.5 py-1 rounded-xl text-[11px] font-bold transition ${
                       email.includes('admin@')
                         ? 'bg-amber-500 text-black shadow'
-                        : 'text-gray-400 hover:text-white hover:bg-white/5'
+                        : 'text-gray-300 hover:text-white hover:bg-white/10'
                     }`}
                   >
                     Admin
@@ -519,7 +529,7 @@ export const UnifiedLoginPage: React.FC = () => {
                     className={`px-2.5 py-1 rounded-xl text-[11px] font-bold transition ${
                       email.includes('staff')
                         ? 'bg-amber-500 text-black shadow'
-                        : 'text-gray-400 hover:text-white hover:bg-white/5'
+                        : 'text-gray-300 hover:text-white hover:bg-white/10'
                     }`}
                   >
                     Staff
@@ -530,14 +540,20 @@ export const UnifiedLoginPage: React.FC = () => {
 
             {/* Notification & Feedback Alerts */}
             {error && (
-              <div className="mb-4 p-3.5 rounded-xl text-xs flex items-center gap-2 font-medium" style={{ backgroundColor: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', color: '#fca5a5' }}>
+              <div
+                className="mb-4 p-3.5 rounded-xl text-xs flex items-center gap-2 font-medium backdrop-blur-md"
+                style={{ backgroundColor: 'rgba(239,68,68,0.2)', border: '1px solid rgba(239,68,68,0.4)', color: '#fca5a5' }}
+              >
                 <AlertTriangle className="w-4 h-4 shrink-0" style={{ color: '#f87171' }} />
                 <span>{error}</span>
               </div>
             )}
 
             {successMsg && (
-              <div className="mb-4 p-3.5 rounded-xl text-xs flex items-center gap-2 font-medium" style={{ backgroundColor: 'rgba(16,185,129,0.1)', border: '1px solid rgba(16,185,129,0.3)', color: '#6ee7b7' }}>
+              <div
+                className="mb-4 p-3.5 rounded-xl text-xs flex items-center gap-2 font-medium backdrop-blur-md"
+                style={{ backgroundColor: 'rgba(16,185,129,0.2)', border: '1px solid rgba(16,185,129,0.4)', color: '#6ee7b7' }}
+              >
                 <CheckCircle2 className="w-4 h-4 shrink-0" style={{ color: '#34d399' }} />
                 <span>{successMsg}</span>
               </div>
@@ -547,29 +563,38 @@ export const UnifiedLoginPage: React.FC = () => {
             {step === 'LOGIN' && (
               <>
                 <div className="text-center mb-5">
-                  <h1 className="text-lg font-bold text-white tracking-tight">
+                  <h1 className="text-lg font-bold text-white tracking-tight drop-shadow-sm">
                     Welcome Back, Please login to your account
                   </h1>
                 </div>
 
                 <form onSubmit={handleLoginSubmit} className="space-y-4">
                   <div>
-                    <label className="block text-xs font-medium mb-1.5" style={{ color: '#d1d5db' }}>Email address</label>
+                    <label className="block text-xs font-medium mb-1.5" style={{ color: '#e5e7eb' }}>Email address</label>
                     <input
                       type="email"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       placeholder="you@cafescorner.com"
                       required
-                      className="w-full px-4 py-3 rounded-xl text-white placeholder-gray-500 text-sm focus:outline-none transition"
-                      style={{ backgroundColor: '#2e3036', border: '1px solid transparent' }}
-                      onFocus={(e) => (e.currentTarget.style.borderColor = '#f59e0b')}
-                      onBlur={(e) => (e.currentTarget.style.borderColor = 'transparent')}
+                      className="w-full px-4 py-3 rounded-xl text-white placeholder-gray-400 text-sm focus:outline-none backdrop-blur-md transition"
+                      style={{
+                        backgroundColor: 'rgba(0, 0, 0, 0.32)',
+                        border: '1px solid rgba(255, 255, 255, 0.12)',
+                      }}
+                      onFocus={(e) => {
+                        e.currentTarget.style.borderColor = '#f59e0b';
+                        e.currentTarget.style.backgroundColor = 'rgba(0, 0, 0, 0.5)';
+                      }}
+                      onBlur={(e) => {
+                        e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.12)';
+                        e.currentTarget.style.backgroundColor = 'rgba(0, 0, 0, 0.32)';
+                      }}
                     />
                   </div>
 
                   <div>
-                    <label className="block text-xs font-medium mb-1.5" style={{ color: '#d1d5db' }}>Password</label>
+                    <label className="block text-xs font-medium mb-1.5" style={{ color: '#e5e7eb' }}>Password</label>
                     <div className="relative">
                       <input
                         type={showPassword ? 'text' : 'password'}
@@ -577,16 +602,25 @@ export const UnifiedLoginPage: React.FC = () => {
                         onChange={(e) => setPassword(e.target.value)}
                         placeholder="••••••••••••"
                         required
-                        className="w-full px-4 py-3 rounded-xl text-white placeholder-gray-500 text-sm focus:outline-none transition pr-10"
-                        style={{ backgroundColor: '#2e3036', border: '1px solid transparent' }}
-                        onFocus={(e) => (e.currentTarget.style.borderColor = '#f59e0b')}
-                        onBlur={(e) => (e.currentTarget.style.borderColor = 'transparent')}
+                        className="w-full px-4 py-3 rounded-xl text-white placeholder-gray-400 text-sm focus:outline-none backdrop-blur-md transition pr-10"
+                        style={{
+                          backgroundColor: 'rgba(0, 0, 0, 0.32)',
+                          border: '1px solid rgba(255, 255, 255, 0.12)',
+                        }}
+                        onFocus={(e) => {
+                          e.currentTarget.style.borderColor = '#f59e0b';
+                          e.currentTarget.style.backgroundColor = 'rgba(0, 0, 0, 0.5)';
+                        }}
+                        onBlur={(e) => {
+                          e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.12)';
+                          e.currentTarget.style.backgroundColor = 'rgba(0, 0, 0, 0.32)';
+                        }}
                       />
                       <button
                         type="button"
                         onClick={() => setShowPassword(!showPassword)}
                         className="absolute right-3.5 top-3.5 transition"
-                        style={{ color: '#9ca3af' }}
+                        style={{ color: '#d1d5db' }}
                       >
                         {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                       </button>
@@ -594,12 +628,12 @@ export const UnifiedLoginPage: React.FC = () => {
                   </div>
 
                   <div className="flex items-center justify-between text-xs pt-1">
-                    <label className="flex items-center gap-2 cursor-pointer select-none" style={{ color: '#9ca3af' }}>
+                    <label className="flex items-center gap-2 cursor-pointer select-none" style={{ color: '#d1d5db' }}>
                       <input
                         type="checkbox"
                         checked={rememberMe}
                         onChange={(e) => setRememberMe(e.target.checked)}
-                        className="rounded border-gray-600 w-3.5 h-3.5"
+                        className="rounded border-gray-500 w-3.5 h-3.5"
                         style={{ accentColor: '#f59e0b' }}
                       />
                       <span>Remember me</span>
@@ -612,10 +646,10 @@ export const UnifiedLoginPage: React.FC = () => {
                         setResetEmail(email);
                         setStep('FORGOT_REQUEST');
                       }}
-                      className="underline underline-offset-2 transition"
-                      style={{ color: '#9ca3af' }}
+                      className="underline underline-offset-2 transition font-medium"
+                      style={{ color: '#fbbf24' }}
                       onMouseEnter={(e) => (e.currentTarget.style.color = '#f59e0b')}
-                      onMouseLeave={(e) => (e.currentTarget.style.color = '#9ca3af')}
+                      onMouseLeave={(e) => (e.currentTarget.style.color = '#fbbf24')}
                     >
                       Forgot password ?
                     </button>
@@ -648,15 +682,15 @@ export const UnifiedLoginPage: React.FC = () => {
             {step === 'FORGOT_REQUEST' && (
               <div>
                 <div className="text-center mb-6">
-                  <h2 className="text-xl font-bold text-white tracking-tight">Reset Your Password</h2>
-                  <p className="text-xs mt-1" style={{ color: '#9ca3af' }}>
+                  <h2 className="text-xl font-bold text-white tracking-tight drop-shadow-sm">Reset Your Password</h2>
+                  <p className="text-xs mt-1" style={{ color: '#d1d5db' }}>
                     Enter your email to receive a 6-digit verification security code.
                   </p>
                 </div>
 
                 <form onSubmit={handleForgotRequest} className="space-y-4">
                   <div>
-                    <label className="block text-xs font-medium mb-1.5" style={{ color: '#d1d5db' }}>Registered Email</label>
+                    <label className="block text-xs font-medium mb-1.5" style={{ color: '#e5e7eb' }}>Registered Email</label>
                     <div className="relative">
                       <input
                         type="email"
@@ -664,12 +698,21 @@ export const UnifiedLoginPage: React.FC = () => {
                         onChange={(e) => setResetEmail(e.target.value)}
                         placeholder="you@cafescorner.com"
                         required
-                        className="w-full px-4 py-3 rounded-xl text-white placeholder-gray-500 text-sm focus:outline-none transition"
-                        style={{ backgroundColor: '#2e3036', border: '1px solid transparent' }}
-                        onFocus={(e) => (e.currentTarget.style.borderColor = '#f59e0b')}
-                        onBlur={(e) => (e.currentTarget.style.borderColor = 'transparent')}
+                        className="w-full px-4 py-3 rounded-xl text-white placeholder-gray-400 text-sm focus:outline-none backdrop-blur-md transition"
+                        style={{
+                          backgroundColor: 'rgba(0, 0, 0, 0.32)',
+                          border: '1px solid rgba(255, 255, 255, 0.12)',
+                        }}
+                        onFocus={(e) => {
+                          e.currentTarget.style.borderColor = '#f59e0b';
+                          e.currentTarget.style.backgroundColor = 'rgba(0, 0, 0, 0.5)';
+                        }}
+                        onBlur={(e) => {
+                          e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.12)';
+                          e.currentTarget.style.backgroundColor = 'rgba(0, 0, 0, 0.32)';
+                        }}
                       />
-                      <Mail className="absolute right-3.5 top-3.5 w-4 h-4" style={{ color: '#9ca3af' }} />
+                      <Mail className="absolute right-3.5 top-3.5 w-4 h-4" style={{ color: '#d1d5db' }} />
                     </div>
                   </div>
 
@@ -688,9 +731,9 @@ export const UnifiedLoginPage: React.FC = () => {
                       type="button"
                       onClick={() => setStep('LOGIN')}
                       className="text-xs flex items-center gap-1.5 mx-auto transition"
-                      style={{ color: '#9ca3af' }}
+                      style={{ color: '#d1d5db' }}
                       onMouseEnter={(e) => (e.currentTarget.style.color = '#fff')}
-                      onMouseLeave={(e) => (e.currentTarget.style.color = '#9ca3af')}
+                      onMouseLeave={(e) => (e.currentTarget.style.color = '#d1d5db')}
                     >
                       <ArrowLeft className="w-3.5 h-3.5" /> Back to Sign In
                     </button>
@@ -703,15 +746,18 @@ export const UnifiedLoginPage: React.FC = () => {
             {step === 'FORGOT_VERIFY' && (
               <div>
                 <div className="text-center mb-6">
-                  <h2 className="text-xl font-bold text-white tracking-tight">Enter Verification Code</h2>
-                  <p className="text-xs mt-1" style={{ color: '#9ca3af' }}>
+                  <h2 className="text-xl font-bold text-white tracking-tight drop-shadow-sm">Enter Verification Code</h2>
+                  <p className="text-xs mt-1" style={{ color: '#d1d5db' }}>
                     Enter the 6-digit verification code sent to <strong>{resetEmail}</strong>
                   </p>
                 </div>
 
                 {/* Simulation banner displaying generated code for easy testing */}
                 {generatedCodePreview && (
-                  <div className="mb-4 p-3 rounded-xl text-center" style={{ backgroundColor: 'rgba(245,158,11,0.1)', border: '1px solid rgba(245,158,11,0.2)' }}>
+                  <div
+                    className="mb-4 p-3 rounded-xl text-center backdrop-blur-md"
+                    style={{ backgroundColor: 'rgba(245,158,11,0.18)', border: '1px solid rgba(245,158,11,0.35)' }}
+                  >
                     <span className="text-[10px] uppercase tracking-wider block font-mono" style={{ color: '#fcd34d' }}>
                       Dispatched Verification Code:
                     </span>
@@ -723,7 +769,7 @@ export const UnifiedLoginPage: React.FC = () => {
 
                 <form onSubmit={handleVerifyCodeSubmit} className="space-y-4">
                   <div>
-                    <label className="block text-xs font-medium mb-1.5" style={{ color: '#d1d5db' }}>6-Digit Code</label>
+                    <label className="block text-xs font-medium mb-1.5" style={{ color: '#e5e7eb' }}>6-Digit Code</label>
                     <input
                       type="text"
                       maxLength={6}
@@ -732,10 +778,19 @@ export const UnifiedLoginPage: React.FC = () => {
                       placeholder="123456"
                       required
                       autoFocus
-                      className="w-full px-4 py-3 rounded-xl text-white text-center font-mono text-lg tracking-widest placeholder-gray-500 focus:outline-none transition"
-                      style={{ backgroundColor: '#2e3036', border: '1px solid transparent' }}
-                      onFocus={(e) => (e.currentTarget.style.borderColor = '#f59e0b')}
-                      onBlur={(e) => (e.currentTarget.style.borderColor = 'transparent')}
+                      className="w-full px-4 py-3 rounded-xl text-white text-center font-mono text-lg tracking-widest placeholder-gray-400 focus:outline-none backdrop-blur-md transition"
+                      style={{
+                        backgroundColor: 'rgba(0, 0, 0, 0.32)',
+                        border: '1px solid rgba(255, 255, 255, 0.12)',
+                      }}
+                      onFocus={(e) => {
+                        e.currentTarget.style.borderColor = '#f59e0b';
+                        e.currentTarget.style.backgroundColor = 'rgba(0, 0, 0, 0.5)';
+                      }}
+                      onBlur={(e) => {
+                        e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.12)';
+                        e.currentTarget.style.backgroundColor = 'rgba(0, 0, 0, 0.32)';
+                      }}
                     />
                   </div>
 
@@ -747,7 +802,7 @@ export const UnifiedLoginPage: React.FC = () => {
                     Verify Code
                   </button>
 
-                  <div className="flex items-center justify-between text-xs pt-2" style={{ color: '#9ca3af' }}>
+                  <div className="flex items-center justify-between text-xs pt-2" style={{ color: '#d1d5db' }}>
                     <button
                       type="button"
                       onClick={() => setStep('FORGOT_REQUEST')}
@@ -762,7 +817,7 @@ export const UnifiedLoginPage: React.FC = () => {
                         setGeneratedCodePreview(code);
                         setSuccessMsg('A new verification code has been generated.');
                       }}
-                      className="transition"
+                      className="transition font-semibold"
                       style={{ color: '#fbbf24' }}
                       onMouseEnter={(e) => (e.currentTarget.style.textDecoration = 'underline')}
                       onMouseLeave={(e) => (e.currentTarget.style.textDecoration = 'none')}
@@ -778,15 +833,15 @@ export const UnifiedLoginPage: React.FC = () => {
             {step === 'FORGOT_NEW_PASSWORD' && (
               <div>
                 <div className="text-center mb-6">
-                  <h2 className="text-xl font-bold text-white tracking-tight">Create New Password</h2>
-                  <p className="text-xs mt-1" style={{ color: '#9ca3af' }}>
+                  <h2 className="text-xl font-bold text-white tracking-tight drop-shadow-sm">Create New Password</h2>
+                  <p className="text-xs mt-1" style={{ color: '#d1d5db' }}>
                     Set a secure password for <strong>{resetEmail}</strong>
                   </p>
                 </div>
 
                 <form onSubmit={handleNewPasswordSubmit} className="space-y-4">
                   <div>
-                    <label className="block text-xs font-medium mb-1.5" style={{ color: '#d1d5db' }}>New Password</label>
+                    <label className="block text-xs font-medium mb-1.5" style={{ color: '#e5e7eb' }}>New Password</label>
                     <div className="relative">
                       <input
                         type={showNewPassword ? 'text' : 'password'}
@@ -794,16 +849,25 @@ export const UnifiedLoginPage: React.FC = () => {
                         onChange={(e) => setNewPassword(e.target.value)}
                         placeholder="••••••••••••"
                         required
-                        className="w-full px-4 py-3 rounded-xl text-white placeholder-gray-500 text-sm focus:outline-none transition pr-10"
-                        style={{ backgroundColor: '#2e3036', border: '1px solid transparent' }}
-                        onFocus={(e) => (e.currentTarget.style.borderColor = '#f59e0b')}
-                        onBlur={(e) => (e.currentTarget.style.borderColor = 'transparent')}
+                        className="w-full px-4 py-3 rounded-xl text-white placeholder-gray-400 text-sm focus:outline-none backdrop-blur-md transition pr-10"
+                        style={{
+                          backgroundColor: 'rgba(0, 0, 0, 0.32)',
+                          border: '1px solid rgba(255, 255, 255, 0.12)',
+                        }}
+                        onFocus={(e) => {
+                          e.currentTarget.style.borderColor = '#f59e0b';
+                          e.currentTarget.style.backgroundColor = 'rgba(0, 0, 0, 0.5)';
+                        }}
+                        onBlur={(e) => {
+                          e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.12)';
+                          e.currentTarget.style.backgroundColor = 'rgba(0, 0, 0, 0.32)';
+                        }}
                       />
                       <button
                         type="button"
                         onClick={() => setShowNewPassword(!showNewPassword)}
                         className="absolute right-3.5 top-3.5 transition"
-                        style={{ color: '#9ca3af' }}
+                        style={{ color: '#d1d5db' }}
                       >
                         {showNewPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                       </button>
@@ -811,17 +875,26 @@ export const UnifiedLoginPage: React.FC = () => {
                   </div>
 
                   <div>
-                    <label className="block text-xs font-medium mb-1.5" style={{ color: '#d1d5db' }}>Confirm New Password</label>
+                    <label className="block text-xs font-medium mb-1.5" style={{ color: '#e5e7eb' }}>Confirm New Password</label>
                     <input
                       type="password"
                       value={confirmPassword}
                       onChange={(e) => setConfirmPassword(e.target.value)}
                       placeholder="••••••••••••"
                       required
-                      className="w-full px-4 py-3 rounded-xl text-white placeholder-gray-500 text-sm focus:outline-none transition"
-                      style={{ backgroundColor: '#2e3036', border: '1px solid transparent' }}
-                      onFocus={(e) => (e.currentTarget.style.borderColor = '#f59e0b')}
-                      onBlur={(e) => (e.currentTarget.style.borderColor = 'transparent')}
+                      className="w-full px-4 py-3 rounded-xl text-white placeholder-gray-400 text-sm focus:outline-none backdrop-blur-md transition"
+                      style={{
+                        backgroundColor: 'rgba(0, 0, 0, 0.32)',
+                        border: '1px solid rgba(255, 255, 255, 0.12)',
+                      }}
+                      onFocus={(e) => {
+                        e.currentTarget.style.borderColor = '#f59e0b';
+                        e.currentTarget.style.backgroundColor = 'rgba(0, 0, 0, 0.5)';
+                      }}
+                      onBlur={(e) => {
+                        e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.12)';
+                        e.currentTarget.style.backgroundColor = 'rgba(0, 0, 0, 0.32)';
+                      }}
                     />
                   </div>
 
@@ -841,18 +914,21 @@ export const UnifiedLoginPage: React.FC = () => {
             {step === 'MFA_CHALLENGE' && (
               <div>
                 <div className="text-center mb-6">
-                  <div className="w-12 h-12 rounded-2xl flex items-center justify-center mx-auto mb-3" style={{ backgroundColor: 'rgba(245,158,11,0.2)', border: '1px solid rgba(245,158,11,0.3)', color: '#fbbf24' }}>
+                  <div
+                    className="w-12 h-12 rounded-2xl flex items-center justify-center mx-auto mb-3 backdrop-blur-md"
+                    style={{ backgroundColor: 'rgba(245,158,11,0.25)', border: '1px solid rgba(245,158,11,0.4)', color: '#fbbf24' }}
+                  >
                     <Smartphone className="w-6 h-6" />
                   </div>
-                  <h2 className="text-xl font-bold text-white tracking-tight">Two-Factor Authentication</h2>
-                  <p className="text-xs mt-1" style={{ color: '#9ca3af' }}>
+                  <h2 className="text-xl font-bold text-white tracking-tight drop-shadow-sm">Two-Factor Authentication</h2>
+                  <p className="text-xs mt-1" style={{ color: '#d1d5db' }}>
                     Super Admin role requires 2FA token confirmation. (Demo code: <strong>123456</strong>)
                   </p>
                 </div>
 
                 <form onSubmit={handleMfaSubmit} className="space-y-4">
                   <div>
-                    <label className="block text-xs font-medium mb-1.5" style={{ color: '#d1d5db' }}>MFA Security Token</label>
+                    <label className="block text-xs font-medium mb-1.5" style={{ color: '#e5e7eb' }}>MFA Security Token</label>
                     <input
                       type="text"
                       maxLength={6}
@@ -861,10 +937,19 @@ export const UnifiedLoginPage: React.FC = () => {
                       placeholder="123456"
                       required
                       autoFocus
-                      className="w-full px-4 py-3 rounded-xl text-white text-center font-mono text-xl tracking-widest placeholder-gray-500 focus:outline-none transition"
-                      style={{ backgroundColor: '#2e3036', border: '1px solid transparent' }}
-                      onFocus={(e) => (e.currentTarget.style.borderColor = '#f59e0b')}
-                      onBlur={(e) => (e.currentTarget.style.borderColor = 'transparent')}
+                      className="w-full px-4 py-3 rounded-xl text-white text-center font-mono text-xl tracking-widest placeholder-gray-400 focus:outline-none backdrop-blur-md transition"
+                      style={{
+                        backgroundColor: 'rgba(0, 0, 0, 0.32)',
+                        border: '1px solid rgba(255, 255, 255, 0.12)',
+                      }}
+                      onFocus={(e) => {
+                        e.currentTarget.style.borderColor = '#f59e0b';
+                        e.currentTarget.style.backgroundColor = 'rgba(0, 0, 0, 0.5)';
+                      }}
+                      onBlur={(e) => {
+                        e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.12)';
+                        e.currentTarget.style.backgroundColor = 'rgba(0, 0, 0, 0.32)';
+                      }}
                     />
                   </div>
 
@@ -881,9 +966,9 @@ export const UnifiedLoginPage: React.FC = () => {
                       type="button"
                       onClick={() => setStep('LOGIN')}
                       className="text-xs flex items-center gap-1.5 mx-auto transition"
-                      style={{ color: '#9ca3af' }}
+                      style={{ color: '#d1d5db' }}
                       onMouseEnter={(e) => (e.currentTarget.style.color = '#fff')}
-                      onMouseLeave={(e) => (e.currentTarget.style.color = '#9ca3af')}
+                      onMouseLeave={(e) => (e.currentTarget.style.color = '#d1d5db')}
                     >
                       <ArrowLeft className="w-3.5 h-3.5" /> Cancel MFA
                     </button>
@@ -893,18 +978,21 @@ export const UnifiedLoginPage: React.FC = () => {
             )}
 
             {/* Footer Security Audit Link */}
-            <div className="pt-5 mt-5 flex items-center justify-between text-xs" style={{ borderTop: '1px solid rgba(255,255,255,0.05)', color: '#6b7280' }}>
+            <div
+              className="pt-5 mt-5 flex items-center justify-between text-xs"
+              style={{ borderTop: '1px solid rgba(255,255,255,0.1)', color: '#9ca3af' }}
+            >
               <button
                 type="button"
                 onClick={() => setShowAuditModal(true)}
                 className="flex items-center gap-1.5 transition"
                 onMouseEnter={(e) => (e.currentTarget.style.color = '#f59e0b')}
-                onMouseLeave={(e) => (e.currentTarget.style.color = '#6b7280')}
+                onMouseLeave={(e) => (e.currentTarget.style.color = '#9ca3af')}
               >
                 <History className="w-3.5 h-3.5" />
                 <span>Login History &amp; Security Logs</span>
               </button>
-              <div className="flex items-center gap-1 text-[11px]" style={{ color: '#6b7280' }}>
+              <div className="flex items-center gap-1 text-[11px]" style={{ color: '#9ca3af' }}>
                 <Shield className="w-3 h-3" style={{ color: '#34d399' }} />
                 <span>Supabase RLS Protected</span>
               </div>
