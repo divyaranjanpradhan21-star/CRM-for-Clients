@@ -434,7 +434,7 @@ export const UnifiedLoginPage: React.FC = () => {
         </h1>
 
         {/* Iced Coffee drink hero image (cutout PNG with dynamic splash & beans - enlarged hero size) */}
-        <div className="mt-2 flex items-end justify-center" style={{ height: 'clamp(280px, 48vh, 520px)' }}>
+        <div className="mt-2 flex items-end justify-center" style={{ height: 'clamp(380px, 62vh, 680px)' }}>
           <img
             src="/hero-coffee.png"
             alt="Cafe's Corner Iced Coffee"
@@ -442,7 +442,7 @@ export const UnifiedLoginPage: React.FC = () => {
               height: '100%',
               width: 'auto',
               objectFit: 'contain',
-              filter: 'drop-shadow(0 20px 45px rgba(100,60,20,0.28))',
+              filter: 'drop-shadow(0 28px 60px rgba(100,60,20,0.35))',
             }}
             onError={(e) => {
               // fallback if image not found
