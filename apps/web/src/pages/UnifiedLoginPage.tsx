@@ -415,23 +415,26 @@ export const UnifiedLoginPage: React.FC = () => {
         </button>
       </header>
 
-      {/* ── Hero Section: Headline + Coffee Cup ── */}
-      <div className="absolute inset-0 z-0 flex flex-col items-center justify-center pointer-events-none select-none" style={{ paddingTop: '56px', paddingBottom: '56px' }}>
+      {/* ── Hero Section: Headline + Coffee Cup (Centered on left/center area) ── */}
+      <div
+        className="absolute inset-0 z-0 flex flex-col items-center justify-center pointer-events-none select-none transition-all duration-300 lg:pr-[440px] xl:pr-[500px]"
+        style={{ paddingTop: '56px', paddingBottom: '56px' }}
+      >
         <h1
           className="text-center uppercase font-black leading-none tracking-tight"
           style={{
-            fontSize: 'clamp(2.8rem, 7vw, 6rem)',
+            fontSize: 'clamp(2.5rem, 6.5vw, 5.5rem)',
             color: '#1a3a1a',
             textShadow: '0 2px 12px rgba(26,58,26,0.08)',
             lineHeight: 1.05,
-            maxWidth: '700px',
+            maxWidth: '680px',
           }}
         >
           A GREAT MORNING<br />STARTS WITH
         </h1>
 
         {/* Coffee cup hero image */}
-        <div className="mt-4 flex items-end justify-center" style={{ height: 'clamp(200px, 30vh, 320px)' }}>
+        <div className="mt-4 flex items-end justify-center" style={{ height: 'clamp(180px, 28vh, 320px)' }}>
           <img
             src="/hero-coffee.jpg"
             alt="Cafe's Corner Coffee"
@@ -450,7 +453,7 @@ export const UnifiedLoginPage: React.FC = () => {
       </div>
 
       {/* ── Bottom Info Bar ── */}
-      <footer className="absolute bottom-0 left-0 right-0 z-10 flex items-end justify-between px-8 py-5">
+      <footer className="absolute bottom-0 left-0 right-0 z-10 flex items-end justify-between px-8 py-5 pointer-events-none">
         <div>
           <p className="text-xs font-black uppercase tracking-widest" style={{ color: '#1a3a1a' }}>OPENING HOURS</p>
           <p className="text-xs" style={{ color: '#5c4a2a' }}>7 AM – 11 PM · every day</p>
@@ -461,14 +464,16 @@ export const UnifiedLoginPage: React.FC = () => {
         </div>
       </footer>
 
-      {/* ── Login Form Overlay (centered, frosted glass transparent card) ── */}
-      <div className="absolute inset-0 z-20 flex items-center justify-center p-4">
+      {/* ── Login Form Overlay (Right-aligned on desktop with deep warm frosted blur) ── */}
+      <div className="absolute inset-0 z-20 flex items-center justify-center lg:justify-end p-4 sm:p-6 lg:pr-14 xl:pr-24 overflow-y-auto">
         <div
-          className="w-full max-w-sm rounded-3xl overflow-hidden backdrop-blur-xl transition-all duration-300"
+          className="w-full max-w-sm rounded-3xl overflow-hidden transition-all duration-300 my-auto"
           style={{
-            backgroundColor: 'rgba(24, 25, 28, 0.45)',
-            border: '1px solid rgba(255, 255, 255, 0.18)',
-            boxShadow: '0 25px 60px -12px rgba(0, 0, 0, 0.5), inset 0 1px 1px rgba(255, 255, 255, 0.25)',
+            backgroundColor: 'rgba(38, 28, 20, 0.48)',
+            backdropFilter: 'blur(36px) saturate(180%)',
+            WebkitBackdropFilter: 'blur(36px) saturate(180%)',
+            border: '1px solid rgba(255, 245, 230, 0.22)',
+            boxShadow: '0 30px 70px -15px rgba(45, 25, 10, 0.4), inset 0 1px 2px rgba(255, 255, 255, 0.3)',
           }}
         >
           <div className="p-8">
@@ -493,9 +498,11 @@ export const UnifiedLoginPage: React.FC = () => {
             {/* Quick Role Fill Pills (LOGIN step only) */}
             {step === 'LOGIN' && (
               <div
-                className="mb-5 p-1.5 rounded-2xl flex items-center justify-between text-xs backdrop-blur-md"
+                className="mb-5 p-1.5 rounded-2xl flex items-center justify-between text-xs"
                 style={{
-                  backgroundColor: 'rgba(0, 0, 0, 0.3)',
+                  backgroundColor: 'rgba(25, 18, 14, 0.42)',
+                  backdropFilter: 'blur(20px)',
+                  WebkitBackdropFilter: 'blur(20px)',
                   border: '1px solid rgba(255, 255, 255, 0.12)',
                 }}
               >
@@ -541,8 +548,14 @@ export const UnifiedLoginPage: React.FC = () => {
             {/* Notification & Feedback Alerts */}
             {error && (
               <div
-                className="mb-4 p-3.5 rounded-xl text-xs flex items-center gap-2 font-medium backdrop-blur-md"
-                style={{ backgroundColor: 'rgba(239,68,68,0.2)', border: '1px solid rgba(239,68,68,0.4)', color: '#fca5a5' }}
+                className="mb-4 p-3.5 rounded-xl text-xs flex items-center gap-2 font-medium"
+                style={{
+                  backgroundColor: 'rgba(239,68,68,0.22)',
+                  backdropFilter: 'blur(16px)',
+                  WebkitBackdropFilter: 'blur(16px)',
+                  border: '1px solid rgba(239,68,68,0.4)',
+                  color: '#fca5a5'
+                }}
               >
                 <AlertTriangle className="w-4 h-4 shrink-0" style={{ color: '#f87171' }} />
                 <span>{error}</span>
@@ -551,8 +564,14 @@ export const UnifiedLoginPage: React.FC = () => {
 
             {successMsg && (
               <div
-                className="mb-4 p-3.5 rounded-xl text-xs flex items-center gap-2 font-medium backdrop-blur-md"
-                style={{ backgroundColor: 'rgba(16,185,129,0.2)', border: '1px solid rgba(16,185,129,0.4)', color: '#6ee7b7' }}
+                className="mb-4 p-3.5 rounded-xl text-xs flex items-center gap-2 font-medium"
+                style={{
+                  backgroundColor: 'rgba(16,185,129,0.22)',
+                  backdropFilter: 'blur(16px)',
+                  WebkitBackdropFilter: 'blur(16px)',
+                  border: '1px solid rgba(16,185,129,0.4)',
+                  color: '#6ee7b7'
+                }}
               >
                 <CheckCircle2 className="w-4 h-4 shrink-0" style={{ color: '#34d399' }} />
                 <span>{successMsg}</span>
@@ -577,18 +596,20 @@ export const UnifiedLoginPage: React.FC = () => {
                       onChange={(e) => setEmail(e.target.value)}
                       placeholder="you@cafescorner.com"
                       required
-                      className="w-full px-4 py-3 rounded-xl text-white placeholder-gray-400 text-sm focus:outline-none backdrop-blur-md transition"
+                      className="w-full px-4 py-3 rounded-xl text-white placeholder-gray-400 text-sm focus:outline-none transition"
                       style={{
-                        backgroundColor: 'rgba(0, 0, 0, 0.32)',
-                        border: '1px solid rgba(255, 255, 255, 0.12)',
+                        backgroundColor: 'rgba(25, 18, 14, 0.42)',
+                        backdropFilter: 'blur(20px)',
+                        WebkitBackdropFilter: 'blur(20px)',
+                        border: '1px solid rgba(255, 255, 255, 0.14)',
                       }}
                       onFocus={(e) => {
                         e.currentTarget.style.borderColor = '#f59e0b';
-                        e.currentTarget.style.backgroundColor = 'rgba(0, 0, 0, 0.5)';
+                        e.currentTarget.style.backgroundColor = 'rgba(25, 18, 14, 0.65)';
                       }}
                       onBlur={(e) => {
-                        e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.12)';
-                        e.currentTarget.style.backgroundColor = 'rgba(0, 0, 0, 0.32)';
+                        e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.14)';
+                        e.currentTarget.style.backgroundColor = 'rgba(25, 18, 14, 0.42)';
                       }}
                     />
                   </div>
@@ -602,18 +623,20 @@ export const UnifiedLoginPage: React.FC = () => {
                         onChange={(e) => setPassword(e.target.value)}
                         placeholder="••••••••••••"
                         required
-                        className="w-full px-4 py-3 rounded-xl text-white placeholder-gray-400 text-sm focus:outline-none backdrop-blur-md transition pr-10"
+                        className="w-full px-4 py-3 rounded-xl text-white placeholder-gray-400 text-sm focus:outline-none transition pr-10"
                         style={{
-                          backgroundColor: 'rgba(0, 0, 0, 0.32)',
-                          border: '1px solid rgba(255, 255, 255, 0.12)',
+                          backgroundColor: 'rgba(25, 18, 14, 0.42)',
+                          backdropFilter: 'blur(20px)',
+                          WebkitBackdropFilter: 'blur(20px)',
+                          border: '1px solid rgba(255, 255, 255, 0.14)',
                         }}
                         onFocus={(e) => {
                           e.currentTarget.style.borderColor = '#f59e0b';
-                          e.currentTarget.style.backgroundColor = 'rgba(0, 0, 0, 0.5)';
+                          e.currentTarget.style.backgroundColor = 'rgba(25, 18, 14, 0.65)';
                         }}
                         onBlur={(e) => {
-                          e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.12)';
-                          e.currentTarget.style.backgroundColor = 'rgba(0, 0, 0, 0.32)';
+                          e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.14)';
+                          e.currentTarget.style.backgroundColor = 'rgba(25, 18, 14, 0.42)';
                         }}
                       />
                       <button
@@ -698,18 +721,20 @@ export const UnifiedLoginPage: React.FC = () => {
                         onChange={(e) => setResetEmail(e.target.value)}
                         placeholder="you@cafescorner.com"
                         required
-                        className="w-full px-4 py-3 rounded-xl text-white placeholder-gray-400 text-sm focus:outline-none backdrop-blur-md transition"
+                        className="w-full px-4 py-3 rounded-xl text-white placeholder-gray-400 text-sm focus:outline-none transition"
                         style={{
-                          backgroundColor: 'rgba(0, 0, 0, 0.32)',
-                          border: '1px solid rgba(255, 255, 255, 0.12)',
+                          backgroundColor: 'rgba(25, 18, 14, 0.42)',
+                          backdropFilter: 'blur(20px)',
+                          WebkitBackdropFilter: 'blur(20px)',
+                          border: '1px solid rgba(255, 255, 255, 0.14)',
                         }}
                         onFocus={(e) => {
                           e.currentTarget.style.borderColor = '#f59e0b';
-                          e.currentTarget.style.backgroundColor = 'rgba(0, 0, 0, 0.5)';
+                          e.currentTarget.style.backgroundColor = 'rgba(25, 18, 14, 0.65)';
                         }}
                         onBlur={(e) => {
-                          e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.12)';
-                          e.currentTarget.style.backgroundColor = 'rgba(0, 0, 0, 0.32)';
+                          e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.14)';
+                          e.currentTarget.style.backgroundColor = 'rgba(25, 18, 14, 0.42)';
                         }}
                       />
                       <Mail className="absolute right-3.5 top-3.5 w-4 h-4" style={{ color: '#d1d5db' }} />
@@ -755,8 +780,13 @@ export const UnifiedLoginPage: React.FC = () => {
                 {/* Simulation banner displaying generated code for easy testing */}
                 {generatedCodePreview && (
                   <div
-                    className="mb-4 p-3 rounded-xl text-center backdrop-blur-md"
-                    style={{ backgroundColor: 'rgba(245,158,11,0.18)', border: '1px solid rgba(245,158,11,0.35)' }}
+                    className="mb-4 p-3 rounded-xl text-center"
+                    style={{
+                      backgroundColor: 'rgba(245,158,11,0.2)',
+                      backdropFilter: 'blur(20px)',
+                      WebkitBackdropFilter: 'blur(20px)',
+                      border: '1px solid rgba(245,158,11,0.4)',
+                    }}
                   >
                     <span className="text-[10px] uppercase tracking-wider block font-mono" style={{ color: '#fcd34d' }}>
                       Dispatched Verification Code:
@@ -778,18 +808,20 @@ export const UnifiedLoginPage: React.FC = () => {
                       placeholder="123456"
                       required
                       autoFocus
-                      className="w-full px-4 py-3 rounded-xl text-white text-center font-mono text-lg tracking-widest placeholder-gray-400 focus:outline-none backdrop-blur-md transition"
+                      className="w-full px-4 py-3 rounded-xl text-white text-center font-mono text-lg tracking-widest placeholder-gray-400 focus:outline-none transition"
                       style={{
-                        backgroundColor: 'rgba(0, 0, 0, 0.32)',
-                        border: '1px solid rgba(255, 255, 255, 0.12)',
+                        backgroundColor: 'rgba(25, 18, 14, 0.42)',
+                        backdropFilter: 'blur(20px)',
+                        WebkitBackdropFilter: 'blur(20px)',
+                        border: '1px solid rgba(255, 255, 255, 0.14)',
                       }}
                       onFocus={(e) => {
                         e.currentTarget.style.borderColor = '#f59e0b';
-                        e.currentTarget.style.backgroundColor = 'rgba(0, 0, 0, 0.5)';
+                        e.currentTarget.style.backgroundColor = 'rgba(25, 18, 14, 0.65)';
                       }}
                       onBlur={(e) => {
-                        e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.12)';
-                        e.currentTarget.style.backgroundColor = 'rgba(0, 0, 0, 0.32)';
+                        e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.14)';
+                        e.currentTarget.style.backgroundColor = 'rgba(25, 18, 14, 0.42)';
                       }}
                     />
                   </div>
@@ -849,18 +881,20 @@ export const UnifiedLoginPage: React.FC = () => {
                         onChange={(e) => setNewPassword(e.target.value)}
                         placeholder="••••••••••••"
                         required
-                        className="w-full px-4 py-3 rounded-xl text-white placeholder-gray-400 text-sm focus:outline-none backdrop-blur-md transition pr-10"
+                        className="w-full px-4 py-3 rounded-xl text-white placeholder-gray-400 text-sm focus:outline-none transition pr-10"
                         style={{
-                          backgroundColor: 'rgba(0, 0, 0, 0.32)',
-                          border: '1px solid rgba(255, 255, 255, 0.12)',
+                          backgroundColor: 'rgba(25, 18, 14, 0.42)',
+                          backdropFilter: 'blur(20px)',
+                          WebkitBackdropFilter: 'blur(20px)',
+                          border: '1px solid rgba(255, 255, 255, 0.14)',
                         }}
                         onFocus={(e) => {
                           e.currentTarget.style.borderColor = '#f59e0b';
-                          e.currentTarget.style.backgroundColor = 'rgba(0, 0, 0, 0.5)';
+                          e.currentTarget.style.backgroundColor = 'rgba(25, 18, 14, 0.65)';
                         }}
                         onBlur={(e) => {
-                          e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.12)';
-                          e.currentTarget.style.backgroundColor = 'rgba(0, 0, 0, 0.32)';
+                          e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.14)';
+                          e.currentTarget.style.backgroundColor = 'rgba(25, 18, 14, 0.42)';
                         }}
                       />
                       <button
@@ -882,18 +916,20 @@ export const UnifiedLoginPage: React.FC = () => {
                       onChange={(e) => setConfirmPassword(e.target.value)}
                       placeholder="••••••••••••"
                       required
-                      className="w-full px-4 py-3 rounded-xl text-white placeholder-gray-400 text-sm focus:outline-none backdrop-blur-md transition"
+                      className="w-full px-4 py-3 rounded-xl text-white placeholder-gray-400 text-sm focus:outline-none transition"
                       style={{
-                        backgroundColor: 'rgba(0, 0, 0, 0.32)',
-                        border: '1px solid rgba(255, 255, 255, 0.12)',
+                        backgroundColor: 'rgba(25, 18, 14, 0.42)',
+                        backdropFilter: 'blur(20px)',
+                        WebkitBackdropFilter: 'blur(20px)',
+                        border: '1px solid rgba(255, 255, 255, 0.14)',
                       }}
                       onFocus={(e) => {
                         e.currentTarget.style.borderColor = '#f59e0b';
-                        e.currentTarget.style.backgroundColor = 'rgba(0, 0, 0, 0.5)';
+                        e.currentTarget.style.backgroundColor = 'rgba(25, 18, 14, 0.65)';
                       }}
                       onBlur={(e) => {
-                        e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.12)';
-                        e.currentTarget.style.backgroundColor = 'rgba(0, 0, 0, 0.32)';
+                        e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.14)';
+                        e.currentTarget.style.backgroundColor = 'rgba(25, 18, 14, 0.42)';
                       }}
                     />
                   </div>
@@ -915,8 +951,14 @@ export const UnifiedLoginPage: React.FC = () => {
               <div>
                 <div className="text-center mb-6">
                   <div
-                    className="w-12 h-12 rounded-2xl flex items-center justify-center mx-auto mb-3 backdrop-blur-md"
-                    style={{ backgroundColor: 'rgba(245,158,11,0.25)', border: '1px solid rgba(245,158,11,0.4)', color: '#fbbf24' }}
+                    className="w-12 h-12 rounded-2xl flex items-center justify-center mx-auto mb-3"
+                    style={{
+                      backgroundColor: 'rgba(245,158,11,0.25)',
+                      backdropFilter: 'blur(20px)',
+                      WebkitBackdropFilter: 'blur(20px)',
+                      border: '1px solid rgba(245,158,11,0.4)',
+                      color: '#fbbf24'
+                    }}
                   >
                     <Smartphone className="w-6 h-6" />
                   </div>
@@ -937,18 +979,20 @@ export const UnifiedLoginPage: React.FC = () => {
                       placeholder="123456"
                       required
                       autoFocus
-                      className="w-full px-4 py-3 rounded-xl text-white text-center font-mono text-xl tracking-widest placeholder-gray-400 focus:outline-none backdrop-blur-md transition"
+                      className="w-full px-4 py-3 rounded-xl text-white text-center font-mono text-xl tracking-widest placeholder-gray-400 focus:outline-none transition"
                       style={{
-                        backgroundColor: 'rgba(0, 0, 0, 0.32)',
-                        border: '1px solid rgba(255, 255, 255, 0.12)',
+                        backgroundColor: 'rgba(25, 18, 14, 0.42)',
+                        backdropFilter: 'blur(20px)',
+                        WebkitBackdropFilter: 'blur(20px)',
+                        border: '1px solid rgba(255, 255, 255, 0.14)',
                       }}
                       onFocus={(e) => {
                         e.currentTarget.style.borderColor = '#f59e0b';
-                        e.currentTarget.style.backgroundColor = 'rgba(0, 0, 0, 0.5)';
+                        e.currentTarget.style.backgroundColor = 'rgba(25, 18, 14, 0.65)';
                       }}
                       onBlur={(e) => {
-                        e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.12)';
-                        e.currentTarget.style.backgroundColor = 'rgba(0, 0, 0, 0.32)';
+                        e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.14)';
+                        e.currentTarget.style.backgroundColor = 'rgba(25, 18, 14, 0.42)';
                       }}
                     />
                   </div>
@@ -980,7 +1024,7 @@ export const UnifiedLoginPage: React.FC = () => {
             {/* Footer Security Audit Link */}
             <div
               className="pt-5 mt-5 flex items-center justify-between text-xs"
-              style={{ borderTop: '1px solid rgba(255,255,255,0.1)', color: '#9ca3af' }}
+              style={{ borderTop: '1px solid rgba(255,255,255,0.12)', color: '#9ca3af' }}
             >
               <button
                 type="button"
