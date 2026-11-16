@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { SEOHead } from '../../components/SEOHead';
-import { clearCurrentSession } from '../../lib/auth';
+import { clearCurrentSession, getCurrentUser } from '../../lib/auth';
 import { supabase } from '../../lib/supabase';
 import {
   Utensils,
@@ -15,12 +15,24 @@ import {
   Layers,
   ChevronRight,
   Coffee,
-  Sparkles
+  Sparkles,
+  ArrowUpRight,
+  Search,
+  Bell,
+  Filter,
+  CheckCircle2,
+  Users,
+  Flame,
+  Printer
 } from 'lucide-react';
 
 export const StaffDashboard: React.FC = () => {
   const navigate = useNavigate();
-  const [activeShiftFilter, setActiveShiftFilter] = useState('morning');
+  const currentUser = getCurrentUser();
+  const [activeShiftFilter, setActiveShiftFilter] = useState<'morning' | 'afternoon' | 'evening'>('morning');
+  const [tableFilter, setTableFilter] = useState<'all' | 'OCCUPIED' | 'AVAILABLE' | 'BILL_REQUESTED'>('all');
+  const [activeNavTab, setActiveNavTab] = useState<'floor' | 'tables' | 'queue' | 'actions'>('floor');
+  const [searchQuery, setSearchQuery] = useState('');
 
   const handleLogout = async () => {
     try {
@@ -42,200 +54,388 @@ export const StaffDashboard: React.FC = () => {
   ];
 
   const queue = [
-    { name: 'Renata Osei', role: 'FoodSafe · Cashier', hours: '12.5 hrs · Sat AM' },
-    { name: 'Marcus Bell', role: 'Driver · Lifting', hours: '8.0 hrs · Sat all day' },
-    { name: 'Jonah Petersen', role: 'Line Prep · Grill', hours: '4.5 hrs · Sat AM' },
-    { name: 'Tomas Lindqvist', role: 'Floor Lead · Front', hours: '9.25 hrs · Sat AM' },
-    { name: 'Alma Duarte', role: 'Hostess · Cashier', hours: '14.0 hrs · Sat AM' },
+    { name: 'Renata Osei', role: 'FoodSafe · Cashier', hours: '12.5 hrs · Sat AM', color: '#79415A' },
+    { name: 'Marcus Bell', role: 'Driver · Lifting', hours: '8.0 hrs · Sat all day', color: '#82401D' },
+    { name: 'Jonah Petersen', role: 'Line Prep · Grill', hours: '4.5 hrs · Sat AM', color: '#1F313D' },
+    { name: 'Tomas Lindqvist', role: 'Floor Lead · Front', hours: '9.25 hrs · Sat AM', color: '#383854' },
+    { name: 'Alma Duarte', role: 'Hostess · Cashier', hours: '14.0 hrs · Sat AM', color: '#BA4F57' },
   ];
 
+  const filteredTables = tables.filter((t) => {
+    if (tableFilter !== 'all' && t.status !== tableFilter) return false;
+    if (searchQuery && !t.id.toLowerCase().includes(searchQuery.toLowerCase()) && !t.guest.toLowerCase().includes(searchQuery.toLowerCase())) {
+      return false;
+    }
+    return true;
+  });
+
   return (
-    <div className="min-h-screen bg-[#35251a] text-[#fbf5ef] font-sans flex flex-col antialiased">
+    <div className="min-h-screen bg-[#EAE4D9] p-4 sm:p-6 lg:p-8 text-[#1F313D] font-sans antialiased">
       <SEOHead
-        title="Staff Floor Terminal | DinePulse"
+        title="Staff Floor Terminal | Cafe's Corner"
         description="Daily floor terminal for table assignment, kitchen queues, shift check-ins, and guest orders."
         canonicalPath="/staff/dashboard"
       />
 
-      {/* Top Banner Header */}
-      <header className="h-16 bg-[#261910] border-b border-[#4d3625] px-6 flex items-center justify-between sticky top-0 z-20">
-        <div className="flex items-center gap-4">
-          <Link
-            to="/"
-            title="Cafe's Corner"
-            className="w-12 h-12 flex items-center justify-center hover:scale-105 transition-transform"
-          >
-            <img src="/logo.png" alt="Cafe's Corner" className="w-full h-full object-contain filter drop-shadow-md" />
-          </Link>
-          <div>
-            <div className="text-sm font-bold text-[#fbf5ef] tracking-wide">Cafe's Corner Floor Terminal</div>
-            <div className="text-[10px] text-[#c9a78a] font-mono">Main Coffee Shop &amp; Espresso Bar · Branch #01</div>
-          </div>
-        </div>
-
-        <div className="flex items-center gap-4">
-          <div className="bg-[#412c1d] border border-[#583d29] px-3 py-1 rounded-full text-xs font-semibold text-[#f4ba80] flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-            Floor Active · Shift AM
-          </div>
-
-          <button
-            onClick={handleLogout}
-            className="flex items-center gap-1.5 text-xs text-[#f4ba80] hover:text-white bg-[#412c1d] hover:bg-[#583d29] border border-[#583d29] px-3.5 py-1.5 rounded-full transition"
-          >
-            <LogOut className="w-3.5 h-3.5" />
-            Clock Out
-          </button>
-        </div>
-      </header>
-
-      {/* Body: Warm Purrweb Style Multi-Column Grid */}
-      <div className="flex-1 p-6 grid grid-cols-1 lg:grid-cols-12 gap-6 max-w-[1700px] w-full mx-auto">
-        {/* Left Column (3 cols): Shift Details & Counters */}
-        <div className="lg:col-span-3 space-y-4">
-          <div className="bg-[#2a1c12] border border-[#4d3625] rounded-2xl p-5">
-            <div className="text-[11px] font-mono text-[#c9a78a] uppercase tracking-wider mb-3">Shift Status</div>
-            <div className="space-y-2">
-              <div className="bg-[#3b271a] border border-[#563a26] p-3 rounded-xl flex items-center justify-between">
-                <span className="text-xs font-bold text-[#fbf5ef]">Board</span>
-                <span className="text-xs font-extrabold text-[#f4ba80]">5 OPEN</span>
+      {/* ── Main Outer Rounded Dashboard Canvas (Matching Image 1 Design) ── */}
+      <div className="bg-[#EFE9DF] border border-[#DDD5C7] rounded-[36px] shadow-sm overflow-hidden flex flex-col min-h-[92vh]">
+        {/* Top Capsule Header */}
+        <header className="px-6 lg:px-8 py-5 border-b border-[#DDD5C7]/70 flex flex-wrap items-center justify-between gap-4">
+          <div className="flex items-center gap-6">
+            {/* Logo Stamp */}
+            <Link to="/" title="Cafe's Corner" className="flex items-center gap-2.5 group">
+              <div className="w-10 h-10 rounded-full bg-[#FAF7F2] border border-[#DDD5C7] p-1 flex items-center justify-center shadow-xs group-hover:scale-105 transition-transform">
+                <img src="/logo.png" alt="Cafe's Corner" className="w-full h-full object-contain" />
               </div>
-              <div className="bg-[#3b271a] border border-[#563a26] p-3 rounded-xl flex items-center justify-between">
-                <span className="text-xs font-bold text-[#fbf5ef]">Pool</span>
-                <span className="text-xs font-semibold text-[#c9a78a]">5 Available</span>
-              </div>
-              <div className="bg-[#3b271a] border border-[#563a26] p-3 rounded-xl flex items-center justify-between">
-                <span className="text-xs font-bold text-[#fbf5ef]">Conflicts</span>
-                <span className="text-xs font-semibold text-rose-300">1 Open</span>
-              </div>
-              <div className="bg-[#3b271a] border border-[#563a26] p-3 rounded-xl flex items-center justify-between">
-                <span className="text-xs font-bold text-[#fbf5ef]">Confirmations</span>
-                <span className="text-xs font-semibold text-amber-300">5 Awaiting</span>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-[#2a1c12] border border-[#4d3625] rounded-2xl p-5">
-            <div className="text-[11px] font-mono text-[#c9a78a] uppercase tracking-wider mb-2">Today's Quick Actions</div>
-            <div className="grid grid-cols-1 gap-2 pt-2">
-              <button className="bg-[#df7e26] hover:bg-[#c66c1b] text-white p-3 rounded-xl text-xs font-bold flex items-center justify-center gap-2 shadow-md transition">
-                <Plus className="w-4 h-4" /> Seat Walk-in Party
-              </button>
-              <button className="bg-[#412c1d] hover:bg-[#583d29] text-[#fbf5ef] border border-[#583d29] p-3 rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition">
-                <Utensils className="w-4 h-4 text-[#f4ba80]" /> Quick Bill Print
-              </button>
-            </div>
-          </div>
-        </div>
-
-        {/* Center Main Panel (6 cols): Floor Board & Active Slots */}
-        <div className="lg:col-span-6 bg-[#fbf5ef] text-[#2c1d13] rounded-3xl p-6 shadow-xl flex flex-col justify-between">
-          <div>
-            {/* Header banner */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-[#e8d7c4] gap-3">
               <div>
-                <span className="text-[10px] font-mono text-[#8a684b] uppercase tracking-widest font-bold">
-                  Floor Distribution
+                <span className="font-serif font-black text-lg text-[#1F313D] tracking-tight block leading-none">
+                  Cafe's Corner
                 </span>
-                <div className="text-4xl font-black text-[#2c1d13] tracking-tight mt-1 flex items-baseline gap-3">
-                  5 <span className="text-lg font-bold text-[#df7e26]">OPEN</span>
-                </div>
+                <span className="text-[10px] uppercase font-mono tracking-widest text-[#82401D] font-bold">
+                  Floor Staff Terminal
+                </span>
               </div>
+            </Link>
 
-              {/* Shift toggle pills */}
-              <div className="flex bg-[#edd9c5] p-1 rounded-full text-xs font-bold self-start">
+            {/* Horizontal Capsule Tab Bar matching Image 1 */}
+            <div className="hidden md:flex items-center bg-[#E4DCCE] rounded-full p-1 border border-[#DDD5C7]">
+              {[
+                { id: 'floor', label: 'Floor Board' },
+                { id: 'tables', label: 'Tables (6)' },
+                { id: 'queue', label: 'Staff Queue' },
+                { id: 'actions', label: 'Quick POS' },
+              ].map((tab) => (
                 <button
-                  onClick={() => setActiveShiftFilter('morning')}
-                  className={`px-3 py-1.5 rounded-full transition ${activeShiftFilter === 'morning' ? 'bg-[#df7e26] text-white shadow' : 'text-[#68482f]'}`}
-                >
-                  Morning
-                </button>
-                <button
-                  onClick={() => setActiveShiftFilter('afternoon')}
-                  className={`px-3 py-1.5 rounded-full transition ${activeShiftFilter === 'afternoon' ? 'bg-[#df7e26] text-white shadow' : 'text-[#68482f]'}`}
-                >
-                  Afternoon
-                </button>
-                <button
-                  onClick={() => setActiveShiftFilter('evening')}
-                  className={`px-3 py-1.5 rounded-full transition ${activeShiftFilter === 'evening' ? 'bg-[#df7e26] text-white shadow' : 'text-[#68482f]'}`}
-                >
-                  Evening
-                </button>
-              </div>
-            </div>
-
-            {/* Sub-headline */}
-            <div className="py-4 text-xs text-[#7e5c3e] flex items-center justify-between">
-              <span><strong>18 tables</strong> · 12 filled · all confirmed before 6:00 PM</span>
-              <span className="bg-[#df7e26]/10 text-[#df7e26] px-2.5 py-1 rounded-full font-bold text-[11px]">
-                Kitchen needs 2
-              </span>
-            </div>
-
-            {/* Table Cards Grid */}
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-3 pt-2">
-              {tables.map((t) => (
-                <div
-                  key={t.id}
-                  className={`p-4 rounded-2xl border transition-transform hover:scale-[1.02] flex flex-col justify-between h-36 ${
-                    t.status === 'OCCUPIED'
-                      ? 'bg-[#df7e26] text-white border-transparent shadow-md'
-                      : t.status === 'BILL_REQUESTED'
-                      ? 'bg-[#c66c1b] text-white border-transparent'
-                      : t.status === 'RESERVED'
-                      ? 'bg-[#ecd0b3] text-[#2c1d13] border-[#dcba97]'
-                      : 'bg-white text-[#2c1d13] border-[#e8d7c4]'
+                  key={tab.id}
+                  onClick={() => setActiveNavTab(tab.id as any)}
+                  className={`px-4 py-1.5 rounded-full text-xs font-semibold transition-all ${
+                    activeNavTab === tab.id
+                      ? 'bg-[#1F313D] text-white shadow-xs'
+                      : 'text-[#5C5549] hover:text-[#1F313D] hover:bg-black/5'
                   }`}
                 >
-                  <div className="flex items-center justify-between">
-                    <span className="font-mono font-black text-sm">{t.id}</span>
-                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-black/15">
-                      {t.capacity} Seats
-                    </span>
-                  </div>
-
-                  <div>
-                    <div className="text-xs font-bold truncate">{t.guest}</div>
-                    <div className="text-[10px] opacity-80">{t.server !== '—' ? `Staff: ${t.server}` : 'Unassigned'}</div>
-                  </div>
-
-                  <div className="text-[10px] font-mono font-semibold pt-1 border-t border-black/10 flex justify-between">
-                    <span>{t.status}</span>
-                    <span>{t.time}</span>
-                  </div>
-                </div>
+                  {tab.label}
+                </button>
               ))}
             </div>
           </div>
 
-          <div className="pt-6 border-t border-[#e8d7c4] flex items-center justify-between text-xs text-[#8a684b]">
-            <span>Fast floor sync active</span>
-            <span className="font-mono">Sync latency: 24ms</span>
-          </div>
-        </div>
-
-        {/* Right Column (3 cols): Staff AM Queue */}
-        <div className="lg:col-span-3 space-y-4">
-          <div className="bg-[#2a1c12] border border-[#4d3625] rounded-2xl p-5">
-            <div className="flex items-center justify-between mb-4">
-              <span className="text-xs font-bold text-[#fbf5ef]">SAT AM QUEUE</span>
-              <span className="text-[10px] bg-[#df7e26] text-white px-2 py-0.5 rounded-full font-bold">5 AVAILABLE</span>
+          {/* Right Header Badges & Actions */}
+          <div className="flex items-center gap-3">
+            {/* Floor Status Pill */}
+            <div className="bg-[#FAF7F2] border border-[#DDD5C7] px-3.5 py-1.5 rounded-full text-xs font-semibold text-[#1F313D] flex items-center gap-2 shadow-2xs">
+              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+              <span className="text-[11px] font-mono tracking-wide">Floor Live · Shift AM</span>
             </div>
 
-            <div className="space-y-2.5">
-              {queue.map((person, idx) => (
-                <div key={idx} className="bg-[#3b271a] border border-[#563a26] p-3 rounded-xl flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-xl bg-[#df7e26] text-white font-black text-xs flex items-center justify-center shrink-0">
-                    {person.name.split(' ').map(n => n[0]).join('')}
+            {/* Notification Bell */}
+            <button
+              title="Kitchen alerts"
+              className="w-9 h-9 rounded-full bg-[#FAF7F2] border border-[#DDD5C7] flex items-center justify-center text-[#5C5549] hover:text-[#1F313D] hover:bg-[#F3EDE2] transition-colors shadow-2xs relative"
+            >
+              <Bell className="w-4 h-4" />
+              <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-[#82401D]"></span>
+            </button>
+
+            {/* User Profile Capsule */}
+            <div className="flex items-center gap-2 pl-2 border-l border-[#DDD5C7]">
+              <div className="w-8 h-8 rounded-full bg-[#79415A] text-white font-serif font-bold text-xs flex items-center justify-center shadow-xs">
+                {currentUser?.fullName ? currentUser.fullName.charAt(0).toUpperCase() : 'S'}
+              </div>
+              <div className="hidden xl:block text-left">
+                <span className="text-xs font-bold text-[#1F313D] block leading-tight">
+                  {currentUser?.fullName || 'Staff Member'}
+                </span>
+                <span className="text-[10px] text-[#7A7268] capitalize">
+                  {currentUser?.role || 'Floor Staff'}
+                </span>
+              </div>
+            </div>
+
+            {/* Clock Out / Logout Button */}
+            <button
+              onClick={handleLogout}
+              className="flex items-center gap-1.5 text-xs text-[#82401D] hover:text-white bg-[#FAF7F2] hover:bg-[#82401D] border border-[#DDD5C7] hover:border-[#82401D] px-3.5 py-1.5 rounded-full font-semibold transition-all shadow-2xs ml-1"
+            >
+              <LogOut className="w-3.5 h-3.5" />
+              Clock Out
+            </button>
+          </div>
+        </header>
+
+        {/* ── Main Content Grid with Editorial Purrweb Sand Aesthetic ── */}
+        <div className="flex-1 p-6 lg:p-8 grid grid-cols-1 lg:grid-cols-12 gap-6 max-w-[1720px] w-full mx-auto">
+          {/* Left Column (3.5 cols): Welcome, Shift Counters & Fast Actions */}
+          <div className="lg:col-span-3 xl:col-span-3 space-y-6 flex flex-col justify-between">
+            <div className="space-y-6">
+              {/* Editorial Serif Welcome block */}
+              <div>
+                <h1 className="font-serif text-2xl lg:text-3xl font-normal text-[#1F313D] leading-tight">
+                  Welcome to Floor, <br />
+                  <span className="font-semibold text-[#82401D]">{currentUser?.fullName?.split(' ')[0] || 'Staff Member'}</span>
+                </h1>
+                <p className="text-xs text-[#7A7268] mt-1.5 font-medium flex items-center gap-1.5">
+                  <Calendar className="w-3 h-3 text-[#82401D]" /> Today · Shift AM Floor Terminal
+                </p>
+              </div>
+
+              {/* Shift Status Card */}
+              <div className="bg-[#FAF7F2] rounded-[24px] p-5 border border-[#E5DDD2] shadow-xs">
+                <div className="flex items-center justify-between mb-3.5">
+                  <span className="text-[11px] font-mono uppercase tracking-wider text-[#7A7268] font-bold">
+                    Shift Counters
+                  </span>
+                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-[#EAE4D9] text-[#1F313D]">
+                    Sat AM
+                  </span>
+                </div>
+                <div className="space-y-2">
+                  <div className="bg-[#EFE9DF] border border-[#DDD5C7] p-3 rounded-[16px] flex items-center justify-between">
+                    <span className="text-xs font-bold text-[#1F313D]">Board Capacity</span>
+                    <span className="text-xs font-extrabold text-[#82401D]">5 OPEN</span>
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="text-xs font-bold text-[#fbf5ef] truncate">{person.name}</div>
-                    <div className="text-[10px] text-[#c9a78a] truncate">{person.role}</div>
-                    <div className="text-[9px] text-[#f4ba80]/80 font-mono mt-0.5">{person.hours}</div>
+                  <div className="bg-[#EFE9DF] border border-[#DDD5C7] p-3 rounded-[16px] flex items-center justify-between">
+                    <span className="text-xs font-bold text-[#1F313D]">Staff Pool</span>
+                    <span className="text-xs font-semibold text-[#5C5549]">5 Available</span>
+                  </div>
+                  <div className="bg-[#EFE9DF] border border-[#DDD5C7] p-3 rounded-[16px] flex items-center justify-between">
+                    <span className="text-xs font-bold text-[#1F313D]">Shift Conflicts</span>
+                    <span className="text-xs font-semibold text-[#BA4F57]">1 Open</span>
+                  </div>
+                  <div className="bg-[#EFE9DF] border border-[#DDD5C7] p-3 rounded-[16px] flex items-center justify-between">
+                    <span className="text-xs font-bold text-[#1F313D]">Confirmations</span>
+                    <span className="text-xs font-semibold text-[#79415A]">5 Awaiting</span>
                   </div>
                 </div>
-              ))}
+              </div>
+
+              {/* Quick Actions Card */}
+              <div className="bg-[#FAF7F2] rounded-[24px] p-5 border border-[#E5DDD2] shadow-xs">
+                <span className="text-[11px] font-mono uppercase tracking-wider text-[#7A7268] font-bold block mb-3">
+                  Floor Quick Actions
+                </span>
+                <div className="grid grid-cols-1 gap-2.5">
+                  <button className="bg-[#1F313D] hover:bg-[#383854] text-white p-3 rounded-[16px] text-xs font-bold flex items-center justify-center gap-2 shadow-xs transition-all">
+                    <Plus className="w-4 h-4 text-[#E5C9B3]" /> Seat Walk-in Party
+                  </button>
+                  <button className="bg-[#82401D] hover:bg-[#673536] text-white p-3 rounded-[16px] text-xs font-bold flex items-center justify-center gap-2 shadow-xs transition-all">
+                    <Utensils className="w-4 h-4 text-[#FAF7F2]" /> Quick Bill Print
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Image 1 Dark Contrast Card: Floor Guide / Tips */}
+            <div className="bg-[#1F313D] text-white rounded-[24px] p-5 shadow-xs relative overflow-hidden mt-4">
+              <div className="flex items-center justify-between mb-2">
+                <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center">
+                  <Coffee className="w-4 h-4 text-[#E5C9B3]" />
+                </div>
+                <button
+                  title="Floor Tips"
+                  className="w-7 h-7 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition"
+                >
+                  <ArrowUpRight className="w-3.5 h-3.5" />
+                </button>
+              </div>
+              <h4 className="font-serif font-bold text-sm text-[#FAF7F2]">Kitchen Sync Ready</h4>
+              <p className="text-[11px] text-[#DDD5C7]/80 mt-1 leading-relaxed">
+                Table #5 requested final bill · 2 line cooks on grill · Espresso machine calibrated.
+              </p>
+            </div>
+          </div>
+
+          {/* Center Column (5.5 cols): Floor Table Grid & Live Status */}
+          <div className="lg:col-span-6 xl:col-span-6 bg-[#FAF7F2] rounded-[28px] p-6 border border-[#E5DDD2] shadow-xs flex flex-col justify-between">
+            <div>
+              {/* Header Banner & Shift Selectors */}
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-5 border-b border-[#E5DDD2] gap-4">
+                <div>
+                  <span className="text-[11px] font-mono text-[#82401D] uppercase tracking-widest font-bold">
+                    Floor Distribution
+                  </span>
+                  <div className="text-3xl lg:text-4xl font-serif font-normal text-[#1F313D] tracking-tight mt-1 flex items-baseline gap-3">
+                    5 <span className="text-base font-sans font-bold text-[#82401D]">TABLES OPEN</span>
+                  </div>
+                </div>
+
+                {/* Shift toggle pills */}
+                <div className="flex items-center bg-[#EAE4D9] p-1 rounded-full text-xs font-bold self-start border border-[#DDD5C7]">
+                  {(['morning', 'afternoon', 'evening'] as const).map((shift) => (
+                    <button
+                      key={shift}
+                      onClick={() => setActiveShiftFilter(shift)}
+                      className={`px-3 py-1.5 rounded-full capitalize transition-all ${
+                        activeShiftFilter === shift
+                          ? 'bg-[#1F313D] text-white shadow-xs'
+                          : 'text-[#5C5549] hover:text-[#1F313D]'
+                      }`}
+                    >
+                      {shift}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Status Indicator & Table Filters */}
+              <div className="py-4 flex flex-wrap items-center justify-between gap-2 border-b border-[#E5DDD2]/70">
+                <div className="text-xs text-[#7A7268] flex items-center gap-2">
+                  <span className="font-semibold text-[#1F313D]">18 tables</span> · 12 filled · confirmed before 6:00 PM
+                </div>
+                <div className="flex items-center gap-1.5 bg-[#EFE9DF] p-1 rounded-full border border-[#DDD5C7]">
+                  {[
+                    { id: 'all', label: 'All' },
+                    { id: 'OCCUPIED', label: 'Occupied' },
+                    { id: 'AVAILABLE', label: 'Ready' },
+                    { id: 'BILL_REQUESTED', label: 'Bill' },
+                  ].map((filterItem) => (
+                    <button
+                      key={filterItem.id}
+                      onClick={() => setTableFilter(filterItem.id as any)}
+                      className={`px-2.5 py-1 rounded-full text-[11px] font-semibold transition ${
+                        tableFilter === filterItem.id
+                          ? 'bg-[#82401D] text-white'
+                          : 'text-[#5C5549] hover:text-[#1F313D]'
+                      }`}
+                    >
+                      {filterItem.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Search input for tables */}
+              <div className="pt-3 pb-2">
+                <div className="relative">
+                  <Search className="w-3.5 h-3.5 text-[#7A7268] absolute left-3 top-1/2 -translate-y-1/2" />
+                  <input
+                    type="text"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    placeholder="Search table number or guest name..."
+                    className="w-full bg-[#EFE9DF] border border-[#DDD5C7] rounded-full pl-9 pr-4 py-2 text-xs text-[#1F313D] placeholder-[#7A7268] focus:outline-none focus:border-[#82401D]"
+                  />
+                </div>
+              </div>
+
+              {/* Table Cards Grid (Aesthetic rhythmic alternation matching Image 1) */}
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3.5 pt-3">
+                {filteredTables.map((t) => {
+                  const isOccupied = t.status === 'OCCUPIED';
+                  const isBill = t.status === 'BILL_REQUESTED';
+                  const isReserved = t.status === 'RESERVED';
+
+                  return (
+                    <div
+                      key={t.id}
+                      className={`p-4 rounded-[20px] transition-all duration-200 hover:scale-[1.02] flex flex-col justify-between h-40 border ${
+                        isOccupied
+                          ? 'bg-[#1F313D] text-white border-transparent shadow-md'
+                          : isBill
+                          ? 'bg-[#82401D] text-white border-transparent shadow-xs'
+                          : isReserved
+                          ? 'bg-[#EAE4D9] text-[#1F313D] border-[#DDD5C7]'
+                          : 'bg-[#EFE9DF] text-[#1F313D] border-[#DDD5C7]'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between">
+                        <span className="font-mono font-black text-sm tracking-wide">{t.id}</span>
+                        <span
+                          className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                            isOccupied || isBill ? 'bg-white/20 text-white' : 'bg-black/10 text-[#1F313D]'
+                          }`}
+                        >
+                          {t.capacity} Seats
+                        </span>
+                      </div>
+
+                      <div className="my-1">
+                        <div className="text-xs font-bold truncate leading-tight">{t.guest}</div>
+                        <div
+                          className={`text-[10px] mt-0.5 ${
+                            isOccupied || isBill ? 'text-white/80' : 'text-[#7A7268]'
+                          }`}
+                        >
+                          {t.server !== '—' ? `Staff: ${t.server}` : 'Unassigned'}
+                        </div>
+                      </div>
+
+                      <div
+                        className={`text-[10px] font-mono font-semibold pt-2 border-t flex justify-between items-center ${
+                          isOccupied || isBill
+                            ? 'border-white/15 text-white/90'
+                            : 'border-[#DDD5C7] text-[#5C5549]'
+                        }`}
+                      >
+                        <span className="truncate">{t.status.replace('_', ' ')}</span>
+                        <span className="shrink-0">{t.time}</span>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Bottom latency and telemetry bar */}
+            <div className="pt-6 mt-4 border-t border-[#E5DDD2] flex items-center justify-between text-xs text-[#7A7268]">
+              <span className="flex items-center gap-1.5 font-medium">
+                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" /> Fast floor sync active
+              </span>
+              <span className="font-mono text-[11px] bg-[#EAE4D9] px-2.5 py-1 rounded-full border border-[#DDD5C7]">
+                Latency: 24ms
+              </span>
+            </div>
+          </div>
+
+          {/* Right Column (3 cols): Staff Shift AM Queue */}
+          <div className="lg:col-span-3 xl:col-span-3 space-y-4">
+            <div className="bg-[#FAF7F2] rounded-[24px] p-5 border border-[#E5DDD2] shadow-xs">
+              <div className="flex items-center justify-between mb-4">
+                <div>
+                  <span className="text-xs font-bold text-[#1F313D] block font-serif">Floor Roster Queue</span>
+                  <span className="text-[10px] text-[#7A7268]">Saturday Shift AM</span>
+                </div>
+                <span className="text-[10px] bg-[#1F313D] text-white px-2.5 py-0.5 rounded-full font-bold">
+                  5 AVAILABLE
+                </span>
+              </div>
+
+              <div className="space-y-3">
+                {queue.map((person, idx) => (
+                  <div
+                    key={idx}
+                    className="bg-[#EFE9DF] border border-[#DDD5C7] p-3 rounded-[18px] flex items-center gap-3 transition-colors hover:border-[#82401D]/40"
+                  >
+                    <div
+                      className="w-10 h-10 rounded-full text-white font-serif font-black text-xs flex items-center justify-center shrink-0 shadow-2xs"
+                      style={{ backgroundColor: person.color }}
+                    >
+                      {person.name
+                        .split(' ')
+                        .map((n) => n[0])
+                        .join('')}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="text-xs font-bold text-[#1F313D] truncate">{person.name}</div>
+                      <div className="text-[10px] text-[#7A7268] truncate">{person.role}</div>
+                      <div className="text-[9px] text-[#82401D] font-mono mt-0.5 font-semibold">
+                        {person.hours}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Mini Service Announcement */}
+            <div className="bg-[#EFE9DF] border border-[#DDD5C7] rounded-[20px] p-4 text-xs">
+              <div className="flex items-center gap-2 text-[#82401D] font-bold mb-1">
+                <Flame className="w-3.5 h-3.5" />
+                <span>Peak Rush Forecast</span>
+              </div>
+              <p className="text-[#5C5549] text-[11px] leading-relaxed">
+                Expected 11:30 AM – 1:30 PM. 3 large reservations confirmed in main dining area.
+              </p>
             </div>
           </div>
         </div>
