@@ -86,18 +86,20 @@ export const UnifiedLoginPage: React.FC = () => {
           <div className="absolute inset-0 bg-gradient-to-tr from-[#63452b]/90 via-[#8a633e]/50 to-transparent" />
 
           {/* Decorative artistic Coffee Cup badge in bottom corner */}
-          <div className="relative z-10 bg-black/40 backdrop-blur-md border border-white/20 rounded-2xl p-4 text-white max-w-xs shadow-xl">
+          <div className="relative z-10 bg-black/50 backdrop-blur-md border border-white/20 rounded-2xl p-4 text-white max-w-xs shadow-xl">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-[#df7e26] flex items-center justify-center text-white shadow-md">
-                <Coffee className="w-5 h-5" />
-              </div>
+              <img
+                src="/logo.png"
+                alt="Cafe's Corner Logo"
+                className="w-12 h-12 rounded-full object-contain bg-[#dfc7a2] p-1 shadow-md"
+              />
               <div>
-                <h2 className="text-sm font-bold tracking-tight text-white leading-tight">Cafe &amp; Restaurant CRM</h2>
-                <p className="text-[11px] text-amber-200/90 font-medium">All-in-one unified portal</p>
+                <h2 className="text-sm font-bold tracking-tight text-white leading-tight">Cafe's Corner</h2>
+                <p className="text-[11px] text-amber-200/90 font-medium">Coffee Shop CRM System</p>
               </div>
             </div>
             <p className="text-[11px] text-white/80 mt-2 leading-relaxed">
-              One login handles Super Admin platform control, Restaurant Admin branch management, and Floor Staff terminals.
+              Unified portal for Super Admin platform control, Restaurant Admin branch management, and Floor Staff terminals.
             </p>
           </div>
         </div>
@@ -105,17 +107,21 @@ export const UnifiedLoginPage: React.FC = () => {
         {/* Right Side: Sleek Dark Login Form (Matching Image 2) */}
         <div className="w-full md:w-1/2 bg-[#212226] p-8 sm:p-12 lg:p-14 flex flex-col justify-between">
           <div className="max-w-md w-full mx-auto">
-            {/* Logo matching Cafe Beans design */}
+            {/* Logo matching Cafe's Corner Stamp Emblem */}
             <div className="flex flex-col items-center mb-6 text-center">
-              <div className="w-14 h-14 rounded-2xl bg-[#2e3036] border border-white/10 flex items-center justify-center text-white shadow-inner mb-2">
-                <div className="flex flex-col items-center justify-center">
-                  <div className="w-3.5 h-1.5 border-t-2 border-r-2 border-amber-400 rounded-tr-full mb-0.5"></div>
-                  <Coffee className="w-6 h-6 text-amber-400" />
-                </div>
+              <div className="w-20 h-20 rounded-full bg-[#dfc7a2] border-2 border-white/20 flex items-center justify-center shadow-xl mb-3 overflow-hidden p-1.5 hover:scale-105 transition-transform">
+                <img
+                  src="/logo.png"
+                  alt="Cafe's Corner"
+                  className="w-full h-full object-contain"
+                />
               </div>
-              <div className="text-base font-extrabold tracking-tight text-white flex items-center gap-1">
-                Cafe <span className="text-amber-400">Beans</span>
+              <div className="text-lg font-extrabold tracking-tight text-white flex items-center gap-1.5">
+                Cafe's <span className="text-amber-400">Corner</span>
               </div>
+              <span className="text-[10px] uppercase font-mono tracking-widest text-amber-200/70 font-semibold mt-0.5">
+                Coffee Shop
+              </span>
             </div>
 
             {/* Title & Subtitle */}

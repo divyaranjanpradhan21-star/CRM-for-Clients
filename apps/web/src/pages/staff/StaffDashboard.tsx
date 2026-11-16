@@ -54,12 +54,16 @@ export const StaffDashboard: React.FC = () => {
       {/* Top Banner Header */}
       <header className="h-16 bg-[#261910] border-b border-[#4d3625] px-6 flex items-center justify-between sticky top-0 z-20">
         <div className="flex items-center gap-4">
-          <Link to="/" className="w-9 h-9 rounded-xl bg-[#df7e26] flex items-center justify-center font-black text-white text-base shadow-md">
-            DP
+          <Link
+            to="/"
+            title="Cafe's Corner"
+            className="w-10 h-10 rounded-full bg-[#dfc7a2] border border-[#3e2315]/20 flex items-center justify-center p-0.5 shadow-md hover:scale-105 transition-transform overflow-hidden"
+          >
+            <img src="/logo.png" alt="Cafe's Corner" className="w-full h-full object-contain" />
           </Link>
           <div>
-            <div className="text-sm font-bold text-[#fbf5ef] tracking-wide">Floor Command Terminal</div>
-            <div className="text-[10px] text-[#c9a78a] font-mono">Bistro Downtown · Branch #01</div>
+            <div className="text-sm font-bold text-[#fbf5ef] tracking-wide">Cafe's Corner Floor Terminal</div>
+            <div className="text-[10px] text-[#c9a78a] font-mono">Main Coffee Shop &amp; Espresso Bar · Branch #01</div>
           </div>
         </div>
 

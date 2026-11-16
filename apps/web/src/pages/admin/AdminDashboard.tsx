@@ -46,8 +46,12 @@ export const AdminDashboard: React.FC = () => {
       <aside className="w-16 bg-white border-r border-slate-200 flex flex-col items-center py-6 justify-between select-none shrink-0 shadow-sm z-20">
         <div className="flex flex-col items-center gap-8 w-full">
           {/* Logo Mark */}
-          <Link to="/" className="w-10 h-10 rounded-xl bg-[#f95721] flex items-center justify-center text-white font-black text-xl shadow-md shadow-orange-500/30 hover:scale-105 transition-transform">
-            K
+          <Link
+            to="/"
+            title="Cafe's Corner"
+            className="w-11 h-11 rounded-full bg-[#dfc7a2] border border-[#3e2315]/20 flex items-center justify-center p-0.5 shadow-md hover:scale-105 transition-transform overflow-hidden"
+          >
+            <img src="/logo.png" alt="Cafe's Corner" className="w-full h-full object-contain" />
           </Link>
 
           {/* Navigation Icons */}
@@ -133,8 +137,13 @@ export const AdminDashboard: React.FC = () => {
         {/* Top Header */}
         <header className="h-20 bg-white border-b border-slate-200 px-8 flex items-center justify-between sticky top-0 z-10">
           <div>
-            <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Overview</h1>
-            <p className="text-xs text-slate-400 font-medium">Manage your restaurant & team members from here.</p>
+            <div className="flex items-center gap-2">
+              <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Overview</h1>
+              <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-amber-100 text-amber-900 border border-amber-200">
+                Cafe's Corner
+              </span>
+            </div>
+            <p className="text-xs text-slate-400 font-medium">Manage Cafe's Corner coffee shop & team members from here.</p>
           </div>
 
           {/* Search bar & Profile */}

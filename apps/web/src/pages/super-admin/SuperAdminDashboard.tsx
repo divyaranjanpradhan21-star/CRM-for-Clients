@@ -49,9 +49,10 @@ export const SuperAdminDashboard: React.FC = () => {
           {/* Logo Mark */}
           <Link
             to="/"
-            className="w-10 h-10 rounded-xl bg-[#f95721] flex items-center justify-center text-white font-black text-xl shadow-md shadow-orange-500/30 hover:scale-105 transition-transform"
+            title="Cafe's Corner"
+            className="w-11 h-11 rounded-full bg-[#dfc7a2] border border-[#3e2315]/20 flex items-center justify-center p-0.5 shadow-md hover:scale-105 transition-transform overflow-hidden"
           >
-            K
+            <img src="/logo.png" alt="Cafe's Corner" className="w-full h-full object-contain" />
           </Link>
 
           {/* Navigation Icons */}
@@ -139,11 +140,11 @@ export const SuperAdminDashboard: React.FC = () => {
           <div>
             <div className="flex items-center gap-3">
               <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Super Admin Overview</h1>
-              <span className="bg-orange-500/10 text-[#f95721] border border-orange-500/20 text-[10px] font-mono font-bold px-2 py-0.5 rounded-full uppercase">
-                Platform Director
+              <span className="bg-amber-500/10 text-amber-800 border border-amber-500/20 text-[10px] font-mono font-bold px-2 py-0.5 rounded-full uppercase">
+                Cafe's Corner Platform
               </span>
             </div>
-            <p className="text-xs text-slate-400 font-medium">Global Multi-Tenant Restaurant SaaS Platform Control.</p>
+            <p className="text-xs text-slate-400 font-medium">Cafe's Corner Multi-Tenant Platform &amp; Organization Oversight.</p>
           </div>
 
           {/* Search bar & Profile */}
