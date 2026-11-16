@@ -7,7 +7,7 @@ import { supabase } from './supabase';
 // ─────────────────────────── Types ───────────────────────────
 
 export type OrgStatus = 'ACTIVE' | 'SUSPENDED' | 'DEACTIVATED';
-export type SubscriptionPlan = 'STARTER' | 'GROWTH' | 'PRO' | 'ENTERPRISE';
+export type SubscriptionPlan = 'FREE' | 'BASIC' | 'STANDARD' | 'PREMIUM' | 'ENTERPRISE' | 'STARTER' | 'GROWTH' | 'PRO';
 
 export interface Organization {
   id: string;

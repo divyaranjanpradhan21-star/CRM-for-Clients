@@ -38,10 +38,14 @@ const statusColors: Record<OrgStatus, { badge: string; icon: React.ReactNode }> 
 };
 
 const planColors: Record<SubscriptionPlan, string> = {
+  FREE:       'bg-[#EAE4D9] text-[#5C5549] border-[#DDD5C7]',
+  BASIC:      'bg-blue-50 text-blue-700 border-blue-200',
+  STANDARD:   'bg-emerald-50 text-emerald-800 border-emerald-200',
+  PREMIUM:    'bg-[#79415A]/15 text-[#79415A] border-[#79415A]/30',
+  ENTERPRISE: 'bg-[#1F313D] text-white border-[#1F313D]',
   STARTER:    'bg-[#EAE4D9] text-[#5C5549] border-[#DDD5C7]',
   GROWTH:     'bg-blue-50 text-blue-700 border-blue-200',
   PRO:        'bg-purple-50 text-purple-700 border-purple-200',
-  ENTERPRISE: 'bg-[#1F313D] text-white border-[#1F313D]',
 };
 
 // ─── Blank form state ────────────────────────────────────────────────────────
@@ -291,9 +295,10 @@ export const OrganizationsPage: React.FC = () => {
           className="bg-[#FAF7F2] border border-[#DDD5C7] rounded-full px-3 py-2 text-xs text-[#1F313D] focus:outline-none cursor-pointer"
         >
           <option value="ALL">All Plans</option>
-          <option value="STARTER">Starter</option>
-          <option value="GROWTH">Growth</option>
-          <option value="PRO">Pro</option>
+          <option value="FREE">Free Tier</option>
+          <option value="BASIC">Basic</option>
+          <option value="STANDARD">Standard</option>
+          <option value="PREMIUM">Premium</option>
           <option value="ENTERPRISE">Enterprise</option>
         </select>
         <button onClick={load} className="p-2 rounded-full bg-[#FAF7F2] border border-[#DDD5C7] text-[#5C5549] hover:text-[#1F313D] transition">
@@ -728,9 +733,10 @@ export const OrganizationsPage: React.FC = () => {
                   onChange={(e) => setForm((f) => ({ ...f, subscription_plan: e.target.value as SubscriptionPlan }))}
                   className="w-full bg-[#EFE9DF] border border-[#DDD5C7] rounded-[14px] px-4 py-2.5 text-sm text-[#1F313D] focus:outline-none focus:border-[#82401D] cursor-pointer"
                 >
-                  <option value="STARTER">Starter</option>
-                  <option value="GROWTH">Growth</option>
-                  <option value="PRO">Pro</option>
+                  <option value="FREE">Free Tier</option>
+                  <option value="BASIC">Basic</option>
+                  <option value="STANDARD">Standard</option>
+                  <option value="PREMIUM">Premium</option>
                   <option value="ENTERPRISE">Enterprise</option>
                 </select>
               </div>
@@ -819,9 +825,10 @@ export const OrganizationsPage: React.FC = () => {
               onChange={(e) => setSubPlan(e.target.value as SubscriptionPlan)}
               className="w-full bg-[#EFE9DF] border border-[#DDD5C7] rounded-[14px] px-4 py-2.5 text-sm text-[#1F313D] focus:outline-none mb-4 cursor-pointer"
             >
-              <option value="STARTER">Starter</option>
-              <option value="GROWTH">Growth</option>
-              <option value="PRO">Pro</option>
+              <option value="FREE">Free Tier</option>
+              <option value="BASIC">Basic</option>
+              <option value="STANDARD">Standard</option>
+              <option value="PREMIUM">Premium</option>
               <option value="ENTERPRISE">Enterprise</option>
             </select>
             <label className="text-[11px] font-mono uppercase tracking-wide text-[#7A7268] font-bold block mb-1">Expiry Date (optional)</label>
