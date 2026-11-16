@@ -433,19 +433,19 @@ export const UnifiedLoginPage: React.FC = () => {
           A GREAT MORNING<br />STARTS WITH
         </h1>
 
-        {/* Coffee cup hero image */}
-        <div className="mt-4 flex items-end justify-center" style={{ height: 'clamp(180px, 28vh, 320px)' }}>
+        {/* Iced Coffee drink hero image (cutout PNG with dynamic splash & beans) */}
+        <div className="mt-4 flex items-end justify-center" style={{ height: 'clamp(210px, 34vh, 380px)' }}>
           <img
-            src="/hero-coffee.jpg"
-            alt="Cafe's Corner Coffee"
+            src="/hero-coffee.png"
+            alt="Cafe's Corner Iced Coffee"
             style={{
               height: '100%',
               width: 'auto',
               objectFit: 'contain',
-              filter: 'drop-shadow(0 16px 40px rgba(100,60,20,0.25))',
+              filter: 'drop-shadow(0 16px 36px rgba(100,60,20,0.22))',
             }}
             onError={(e) => {
-              // fallback to coffee emoji if image not found
+              // fallback if image not found
               (e.currentTarget as HTMLImageElement).style.display = 'none';
             }}
           />
