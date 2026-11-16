@@ -423,7 +423,7 @@ export const UnifiedLoginPage: React.FC = () => {
         <h1
           className="text-center uppercase font-black leading-none tracking-tight"
           style={{
-            fontSize: 'clamp(2.5rem, 6.5vw, 5.5rem)',
+            fontSize: 'clamp(1.6rem, 4vw, 3.2rem)',
             color: '#1a3a1a',
             textShadow: '0 2px 12px rgba(26,58,26,0.08)',
             lineHeight: 1.05,
