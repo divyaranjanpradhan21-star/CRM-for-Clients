@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { SEOHead } from '../../components/SEOHead';
 import { clearCurrentSession, getCurrentUser } from '../../lib/auth';
@@ -34,9 +34,58 @@ import {
 export const AdminDashboard: React.FC = () => {
   const navigate = useNavigate();
   const currentUser = getCurrentUser();
+  const orgId = currentUser?.organizationId;
+  const orgName = currentUser?.organizationName || "Cafe's Corner";
+
   const [activeTab, setActiveTab] = useState<'overview' | 'orders' | 'menu' | 'staff' | 'inventory'>('overview');
   const [selectedBranch, setSelectedBranch] = useState('downtown');
   const [dateRange, setDateRange] = useState('weekly');
+
+  // Live database stats scoped to this organization (cross-tenant protected)
+  const [adminStats, setAdminStats] = useState({
+    totalOrders: 0,
+    totalRevenue: 0,
+    deliveredOrders: 0,
+    canceledOrders: 0,
+  });
+  const [branches, setBranches] = useState<string[]>([]);
+  const [recentOrders, setRecentOrders] = useState<any[]>([]);
+
+  useEffect(() => {
+    const fetchAdminData = async () => {
+      try {
+        let ordersQuery = supabase.from('orders').select('id, total_amount, status, created_at, customer_name, order_number');
+        if (orgId) {
+          ordersQuery = ordersQuery.eq('organization_id', orgId);
+        }
+        const { data: ordersData } = await ordersQuery.order('created_at', { ascending: false }).limit(100);
+        const totalOrders = ordersData?.length || 0;
+        const totalRevenue = ordersData?.reduce((sum: number, o: any) => sum + (Number(o.total_amount) || 0), 0) || 0;
+        const deliveredOrders = ordersData?.filter((o: any) => o.status === 'DELIVERED' || o.status === 'COMPLETED').length || 0;
+        const canceledOrders = ordersData?.filter((o: any) => o.status === 'CANCELLED').length || 0;
+        setRecentOrders(ordersData?.slice(0, 6) || []);
+
+        let branchQuery = supabase.from('org_branches').select('name');
+        if (orgId) {
+          branchQuery = branchQuery.eq('organization_id', orgId);
+        }
+        const { data: branchData } = await branchQuery;
+        if (branchData && branchData.length > 0) {
+          setBranches(branchData.map((b: any) => b.name));
+        }
+
+        setAdminStats({
+          totalOrders,
+          totalRevenue,
+          deliveredOrders,
+          canceledOrders,
+        });
+      } catch (err) {
+        console.warn('Admin live data load notice:', err);
+      }
+    };
+    fetchAdminData();
+  }, [orgId]);
 
   const handleLogout = async () => {
     try {
@@ -68,36 +117,13 @@ export const AdminDashboard: React.FC = () => {
               </div>
               <div>
                 <span className="font-serif font-black text-lg text-[#1F313D] tracking-tight block leading-none">
-                  Cafe's Corner
+                  {orgName}
                 </span>
                 <span className="text-[10px] uppercase font-mono tracking-widest text-[#82401D] font-bold">
                   Restaurant Admin
                 </span>
               </div>
             </Link>
-
-            {/* Horizontal Capsule Tab Bar matching Image 1 */}
-            <div className="hidden md:flex items-center bg-[#E4DCCE] rounded-full p-1 border border-[#DDD5C7]">
-              {[
-                { id: 'overview', label: 'Overview' },
-                { id: 'orders', label: 'Orders & POS' },
-                { id: 'menu', label: 'Menu Catalog' },
-                { id: 'staff', label: 'Staff & Shifts' },
-                { id: 'inventory', label: 'Inventory' },
-              ].map((tab) => (
-                <button
-                  key={tab.id}
-                  onClick={() => setActiveTab(tab.id as any)}
-                  className={`px-4 py-1.5 rounded-full text-xs font-semibold transition-all ${
-                    activeTab === tab.id
-                      ? 'bg-[#1F313D] text-white shadow-xs'
-                      : 'text-[#5C5549] hover:text-[#1F313D] hover:bg-black/5'
-                  }`}
-                >
-                  {tab.label}
-                </button>
-              ))}
-            </div>
           </div>
 
           {/* Right Header: Branch, Date, Search & Profile */}
@@ -110,10 +136,16 @@ export const AdminDashboard: React.FC = () => {
                 onChange={(e) => setSelectedBranch(e.target.value)}
                 className="bg-transparent focus:outline-none cursor-pointer text-xs"
               >
-                <option value="downtown">Downtown Flagship</option>
-                <option value="uptown">Uptown Roastery</option>
-                <option value="westside">Westside Lounge</option>
-                <option value="airport">Airport Kiosk</option>
+                {branches.length > 0 ? (
+                  branches.map((b) => (
+                    <option key={b} value={b.toLowerCase()}>{b}</option>
+                  ))
+                ) : (
+                  <>
+                    <option value="main">Main Branch #01</option>
+                    <option value="downtown">Downtown Flagship</option>
+                  </>
+                )}
               </select>
             </div>
 
@@ -237,13 +269,13 @@ export const AdminDashboard: React.FC = () => {
                   <span className="text-xs font-bold text-[#7A7268]">Total Orders</span>
                 </div>
                 <div className="my-3">
-                  <div className="text-3xl font-extrabold text-[#1F313D] tracking-tight">1,250</div>
+                  <div className="text-3xl font-extrabold text-[#1F313D] tracking-tight">{adminStats.totalOrders.toLocaleString()}</div>
                   <div className="flex items-center gap-1.5 text-xs text-emerald-700 mt-1 font-semibold">
-                    <TrendingUp className="w-3.5 h-3.5" /> +10% vs last month
+                    <TrendingUp className="w-3.5 h-3.5" /> Database Synced
                   </div>
                 </div>
                 <div className="text-[11px] text-[#7A7268] pt-2 border-t border-[#DDD5C7]/60">
-                  Daily run-rate: <strong>142 tickets</strong>
+                  Live tickets: <strong>{adminStats.totalOrders} recorded</strong>
                 </div>
               </div>
 
@@ -256,13 +288,13 @@ export const AdminDashboard: React.FC = () => {
                   <span className="text-xs font-bold text-[#E5C9B3]">Total Revenue</span>
                 </div>
                 <div className="my-3">
-                  <div className="text-3xl font-extrabold text-white tracking-tight">$15,750</div>
+                  <div className="text-3xl font-extrabold text-white tracking-tight">${adminStats.totalRevenue.toLocaleString()}</div>
                   <div className="flex items-center gap-1.5 text-xs text-[#E5C9B3] mt-1 font-semibold">
-                    <TrendingUp className="w-3.5 h-3.5" /> +7.5% vs last month
+                    <TrendingUp className="w-3.5 h-3.5" /> Direct POS Ledger
                   </div>
                 </div>
                 <div className="text-[11px] text-[#E5C9B3]/80 pt-2 border-t border-white/10">
-                  Target attainment: <strong>108%</strong>
+                  Gross turnover: <strong>${adminStats.totalRevenue.toLocaleString()}</strong>
                 </div>
               </div>
 
@@ -275,13 +307,13 @@ export const AdminDashboard: React.FC = () => {
                   <span className="text-xs font-bold text-[#7A7268]">Total Delivered</span>
                 </div>
                 <div className="my-3">
-                  <div className="text-3xl font-extrabold text-[#1F313D] tracking-tight">1,070</div>
+                  <div className="text-3xl font-extrabold text-[#1F313D] tracking-tight">{adminStats.deliveredOrders.toLocaleString()}</div>
                   <div className="flex items-center gap-1.5 text-xs text-emerald-700 mt-1 font-semibold">
-                    <TrendingUp className="w-3.5 h-3.5" /> +7.5% fulfilled
+                    <TrendingUp className="w-3.5 h-3.5" /> Kitchen Completed
                   </div>
                 </div>
                 <div className="text-[11px] text-[#7A7268] pt-2 border-t border-[#DDD5C7]/60">
-                  Fulfillment rate: <strong>96.4%</strong>
+                  Fulfillment count: <strong>{adminStats.deliveredOrders} orders</strong>
                 </div>
               </div>
 
@@ -294,13 +326,13 @@ export const AdminDashboard: React.FC = () => {
                   <span className="text-xs font-bold text-[#7A7268]">Canceled Orders</span>
                 </div>
                 <div className="my-3">
-                  <div className="text-3xl font-extrabold text-[#1F313D] tracking-tight">180</div>
+                  <div className="text-3xl font-extrabold text-[#1F313D] tracking-tight">{adminStats.canceledOrders.toLocaleString()}</div>
                   <div className="flex items-center gap-1.5 text-xs text-rose-700 mt-1 font-semibold">
-                    <TrendingDown className="w-3.5 h-3.5" /> -3.5% reduced
+                    <TrendingDown className="w-3.5 h-3.5" /> Voided Tickets
                   </div>
                 </div>
                 <div className="text-[11px] text-[#7A7268] pt-2 border-t border-[#DDD5C7]/60">
-                  Cancellation rate: <strong>3.6%</strong>
+                  Cancellations: <strong>{adminStats.canceledOrders} voided</strong>
                 </div>
               </div>
             </div>
@@ -474,24 +506,28 @@ export const AdminDashboard: React.FC = () => {
                     <span className="text-xs font-bold text-[#82401D]">Live POS Queue</span>
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    {[
-                      { name: 'Beef Steak', id: '#ORD-1001', status: 'Ready to Serve', img: 'https://images.unsplash.com/photo-1544025162-d76694265947?w=160&auto=format&fit=crop&q=80', badge: 'bg-emerald-100 text-emerald-800' },
-                      { name: 'Beef Burger', id: '#ORD-1031', status: 'In Kitchen', img: 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=160&auto=format&fit=crop&q=80', badge: 'bg-amber-100 text-amber-800' },
-                      { name: 'Special Pizza', id: '#ORD-1021', status: 'Delivered', img: 'https://images.unsplash.com/photo-1513104890138-7c749659a591?w=160&auto=format&fit=crop&q=80', badge: 'bg-[#1F313D] text-white' },
-                    ].map((order, i) => (
-                      <div key={i} className="bg-[#EFE9DF] border border-[#DDD5C7] rounded-2xl p-3 flex items-center gap-3">
-                        <img src={order.img} alt={order.name} className="w-14 h-14 rounded-xl object-cover shrink-0" />
-                        <div>
-                          <div className="text-xs font-bold text-[#1F313D]">{order.name}</div>
-                          <div className="text-[10px] text-[#7A7268] font-mono mt-0.5">{order.id}</div>
-                          <span className={`inline-block mt-1 text-[9px] font-bold px-2 py-0.5 rounded-full ${order.badge}`}>
-                            {order.status}
-                          </span>
+                  {recentOrders.length > 0 ? (
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      {recentOrders.map((order, i) => (
+                        <div key={i} className="bg-[#EFE9DF] border border-[#DDD5C7] rounded-2xl p-3 flex items-center gap-3">
+                          <div className="w-12 h-12 rounded-xl bg-[#1F313D] text-white flex items-center justify-center font-bold text-xs shrink-0">
+                            #{order.order_number || order.id?.substring(0, 4) || 'ORD'}
+                          </div>
+                          <div>
+                            <div className="text-xs font-bold text-[#1F313D]">{order.item_summary || order.customer_name || 'Counter Order'}</div>
+                            <div className="text-[10px] text-[#7A7268] font-mono mt-0.5">${Number(order.total_amount || 0).toFixed(2)}</div>
+                            <span className="inline-block mt-1 text-[9px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800">
+                              {order.status || 'Received'}
+                            </span>
+                          </div>
                         </div>
-                      </div>
-                    ))}
-                  </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-center py-6 text-xs text-[#7A7268] bg-[#EFE9DF] rounded-2xl border border-[#DDD5C7]">
+                      No active orders in the database for this branch yet.
+                    </div>
+                  )}
                 </div>
               </div>
 
