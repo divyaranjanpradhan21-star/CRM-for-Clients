@@ -31,7 +31,7 @@ export const AdminDashboard: React.FC = () => {
   const handleLogout = () => {
     localStorage.removeItem('portal_role');
     localStorage.removeItem('user_email');
-    navigate('/admin/login');
+    navigate('/login');
   };
 
   return (

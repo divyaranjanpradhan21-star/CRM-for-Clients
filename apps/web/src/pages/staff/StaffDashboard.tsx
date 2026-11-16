@@ -23,7 +23,7 @@ export const StaffDashboard: React.FC = () => {
   const handleLogout = () => {
     localStorage.removeItem('portal_role');
     localStorage.removeItem('user_email');
-    navigate('/staff/login');
+    navigate('/login');
   };
 
   const tables = [
