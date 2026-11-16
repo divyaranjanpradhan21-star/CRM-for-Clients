@@ -86,12 +86,12 @@ export const UnifiedLoginPage: React.FC = () => {
           <div className="absolute inset-0 bg-gradient-to-tr from-[#63452b]/90 via-[#8a633e]/50 to-transparent" />
 
           {/* Decorative artistic Coffee Cup badge in bottom corner */}
-          <div className="relative z-10 bg-black/50 backdrop-blur-md border border-white/20 rounded-2xl p-4 text-white max-w-xs shadow-xl">
+          <div className="relative z-10 bg-black/60 backdrop-blur-md border border-white/20 rounded-2xl p-4 text-white max-w-xs shadow-xl">
             <div className="flex items-center gap-3">
               <img
                 src="/logo.png"
                 alt="Cafe's Corner Logo"
-                className="w-12 h-12 rounded-full object-contain bg-[#dfc7a2] p-1 shadow-md"
+                className="w-14 h-14 object-contain filter drop-shadow-md"
               />
               <div>
                 <h2 className="text-sm font-bold tracking-tight text-white leading-tight">Cafe's Corner</h2>
@@ -109,11 +109,11 @@ export const UnifiedLoginPage: React.FC = () => {
           <div className="max-w-md w-full mx-auto">
             {/* Logo matching Cafe's Corner Stamp Emblem */}
             <div className="flex flex-col items-center mb-6 text-center">
-              <div className="w-20 h-20 rounded-full bg-[#dfc7a2] border-2 border-white/20 flex items-center justify-center shadow-xl mb-3 overflow-hidden p-1.5 hover:scale-105 transition-transform">
+              <div className="w-24 h-24 mb-2 flex items-center justify-center hover:scale-105 transition-transform">
                 <img
                   src="/logo.png"
                   alt="Cafe's Corner"
-                  className="w-full h-full object-contain"
+                  className="w-full h-full object-contain filter drop-shadow-2xl"
                 />
               </div>
               <div className="text-lg font-extrabold tracking-tight text-white flex items-center gap-1.5">

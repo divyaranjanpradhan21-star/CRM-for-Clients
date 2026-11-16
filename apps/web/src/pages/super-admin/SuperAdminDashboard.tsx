@@ -50,9 +50,9 @@ export const SuperAdminDashboard: React.FC = () => {
           <Link
             to="/"
             title="Cafe's Corner"
-            className="w-11 h-11 rounded-full bg-[#dfc7a2] border border-[#3e2315]/20 flex items-center justify-center p-0.5 shadow-md hover:scale-105 transition-transform overflow-hidden"
+            className="w-12 h-12 flex items-center justify-center hover:scale-105 transition-transform"
           >
-            <img src="/logo.png" alt="Cafe's Corner" className="w-full h-full object-contain" />
+            <img src="/logo.png" alt="Cafe's Corner" className="w-full h-full object-contain filter drop-shadow-sm" />
           </Link>
 
           {/* Navigation Icons */}

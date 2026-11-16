@@ -57,9 +57,9 @@ export const StaffDashboard: React.FC = () => {
           <Link
             to="/"
             title="Cafe's Corner"
-            className="w-10 h-10 rounded-full bg-[#dfc7a2] border border-[#3e2315]/20 flex items-center justify-center p-0.5 shadow-md hover:scale-105 transition-transform overflow-hidden"
+            className="w-11 h-11 flex items-center justify-center hover:scale-105 transition-transform"
           >
-            <img src="/logo.png" alt="Cafe's Corner" className="w-full h-full object-contain" />
+            <img src="/logo.png" alt="Cafe's Corner" className="w-full h-full object-contain filter drop-shadow-md" />
           </Link>
           <div>
             <div className="text-sm font-bold text-[#fbf5ef] tracking-wide">Cafe's Corner Floor Terminal</div>
