@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
+  <rect width="64" height="64" rx="16" fill="#f95721"/>
+  <!-- Chef Hat & Fork Knife geometric stylized logo matching modern dashboard -->
+  <path d="M20 44 L32 20 L44 44" stroke="#ffffff" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M26 34 L38 34" stroke="#ffffff" stroke-width="5" stroke-linecap="round"/>
+  <circle cx="32" cy="14" r="3" fill="#ffffff"/>
+  <circle cx="20" cy="46" r="3" fill="#ffffff"/>
+  <circle cx="44" cy="46" r="3" fill="#ffffff"/>
+</svg>

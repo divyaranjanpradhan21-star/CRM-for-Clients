@@ -2,14 +2,69 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>CRM - Enterprise Client Platform</title>
+    
+    <!-- Primary Identity & Title (No Vite/React in tab) -->
+    <title>DinePulse | Enterprise Cafe & Restaurant CRM SaaS System</title>
+    <meta name="description" content="Production-ready multi-tenant CRM SaaS platform built specifically for cafes, dining restaurants, and multi-branch hospitality groups with separate Super Admin, Restaurant Admin, and Staff terminals." />
+    <link rel="canonical" href="https://dinepulsecrm.com/" />
+    <meta name="theme-color" content="#f95721" />
+
+    <!-- Favicon & Touch Icons -->
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="apple-touch-icon" href="/favicon.svg" />
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://dinepulsecrm.com/" />
+    <meta property="og:title" content="DinePulse | Enterprise Cafe & Restaurant CRM SaaS System" />
+    <meta property="og:description" content="Production-ready multi-tenant CRM SaaS with dedicated Super Admin, Restaurant Admin, and Staff portals." />
+    <meta property="og:image" content="https://dinepulsecrm.com/og-image.svg" />
+    <meta property="og:site_name" content="DinePulse CRM" />
+
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:url" content="https://dinepulsecrm.com/" />
+    <meta name="twitter:title" content="DinePulse | Enterprise Cafe & Restaurant CRM SaaS System" />
+    <meta name="twitter:description" content="Production-ready multi-tenant CRM SaaS with dedicated Super Admin, Restaurant Admin, and Staff portals." />
+    <meta name="twitter:image" content="https://dinepulsecrm.com/og-image.svg" />
+
+    <!-- Structured Data: SoftwareApplication & Restaurant Schema -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "SoftwareApplication",
+          "name": "DinePulse Cafe & Restaurant CRM",
+          "url": "https://dinepulsecrm.com",
+          "applicationCategory": "BusinessApplication",
+          "operatingSystem": "Web, Cloud",
+          "description": "Multi-tenant restaurant CRM SaaS platform with dedicated Super Admin, Restaurant Admin, and Staff portals.",
+          "offers": {
+            "@type": "Offer",
+            "price": "0",
+            "priceCurrency": "USD"
+          }
+        },
+        {
+          "@type": "Restaurant",
+          "name": "DinePulse Demo Restaurant",
+          "url": "https://dinepulsecrm.com",
+          "servesCuisine": "Contemporary, Cafe, Grill",
+          "priceRange": "$$",
+          "telephone": "+1-800-555-DINE"
+        }
+      ]
+    }
+    </script>
+
+    <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
   </head>
-  <body class="bg-[#0f1013] text-gray-100 antialiased selection:bg-blue-600 selection:text-white">
+  <body class="bg-[#f8fafc] text-[#0f172a] antialiased selection:bg-[#f95721] selection:text-white">
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>

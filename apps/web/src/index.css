@@ -2,8 +2,15 @@
 @tailwind components;
 @tailwind utilities;
 
+@layer base {
+  body {
+    font-family: 'Plus Jakarta Sans', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+}
+
 @layer utilities {
-  /* Food doodle pattern matching Login screen (Image 1) */
   .bg-food-pattern {
     background-color: #0d0e12;
     background-image: radial-gradient(rgba(255, 255, 255, 0.04) 1px, transparent 1px),
@@ -12,13 +19,12 @@
     background-position: 0 0, 20px 20px;
   }
 
-  /* Organic wave background curve from Image 1 */
   .bg-wave-gradient {
     background: radial-gradient(circle at 10% 90%, #2054dc 0%, #17389e 35%, transparent 70%);
   }
 }
 
-/* Custom scrollbar for warm dashboard (Image 2) */
+/* Custom scrollbars */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
@@ -29,10 +35,10 @@
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(180, 140, 110, 0.3);
+  background: rgba(148, 163, 184, 0.3);
   border-radius: 9999px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(180, 140, 110, 0.5);
+  background: rgba(148, 163, 184, 0.5);
 }

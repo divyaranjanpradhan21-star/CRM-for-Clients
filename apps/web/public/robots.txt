@@ -1,0 +1,22 @@
+# Robots.txt for DinePulse Cafe & Restaurant CRM SaaS
+User-agent: *
+Allow: /
+Allow: /super-admin/login
+Allow: /admin/login
+Allow: /staff/login
+Allow: /sitemap.xml
+Allow: /llms.txt
+
+# Disallow authenticated backend operations and sensitive administrative sessions
+Disallow: /super-admin/dashboard
+Disallow: /super-admin/organizations
+Disallow: /super-admin/audit-logs
+Disallow: /admin/dashboard
+Disallow: /admin/customers
+Disallow: /admin/orders
+Disallow: /admin/reports
+Disallow: /staff/dashboard
+Disallow: /staff/table-floor
+Disallow: /api/
+
+Sitemap: https://dinepulsecrm.com/sitemap.xml

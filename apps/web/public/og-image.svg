@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" fill="none">
+  <rect width="1200" height="630" fill="#0f1117"/>
+  <circle cx="950" cy="150" r="300" fill="#f95721" fill-opacity="0.15" filter="blur(80px)"/>
+  <circle cx="200" cy="500" r="250" fill="#2563eb" fill-opacity="0.12" filter="blur(90px)"/>
+  
+  <!-- Logo Mark -->
+  <g transform="translate(100, 100)">
+    <rect width="80" height="80" rx="20" fill="#f95721"/>
+    <path d="M25 55 L40 25 L55 55" stroke="#ffffff" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M33 42 L47 42" stroke="#ffffff" stroke-width="6" stroke-linecap="round"/>
+  </g>
+
+  <!-- Typography -->
+  <text x="200" y="150" font-family="'Plus Jakarta Sans', system-ui, sans-serif" font-size="36" font-weight="800" fill="#ffffff">DinePulse CRM</text>
+  <text x="100" y="270" font-family="'Plus Jakarta Sans', system-ui, sans-serif" font-size="64" font-weight="900" fill="#ffffff" letter-spacing="-1">The Complete Cafe &amp; Restaurant</text>
+  <text x="100" y="345" font-family="'Plus Jakarta Sans', system-ui, sans-serif" font-size="64" font-weight="900" fill="#f95721" letter-spacing="-1">SaaS Management Platform</text>
+  
+  <text x="100" y="420" font-family="'Plus Jakarta Sans', system-ui, sans-serif" font-size="24" font-weight="500" fill="#9ca3af">Dedicated Super Admin, Restaurant Admin &amp; Staff Operations Terminals</text>
+
+  <!-- Bottom Pills -->
+  <g transform="translate(100, 480)">
+    <rect width="220" height="50" rx="25" fill="#1f2432" stroke="#374151" stroke-width="1.5"/>
+    <text x="30" y="32" font-family="'Plus Jakarta Sans', system-ui, sans-serif" font-size="16" font-weight="700" fill="#f95721">Super Admin Portal</text>
+
+    <rect x="240" width="220" height="50" rx="25" fill="#1f2432" stroke="#374151" stroke-width="1.5"/>
+    <text x="270" y="32" font-family="'Plus Jakarta Sans', system-ui, sans-serif" font-size="16" font-weight="700" fill="#38bdf8">Restaurant Admin</text>
+
+    <rect x="480" width="180" height="50" rx="25" fill="#1f2432" stroke="#374151" stroke-width="1.5"/>
+    <text x="515" y="32" font-family="'Plus Jakarta Sans', system-ui, sans-serif" font-size="16" font-weight="700" fill="#4ade80">Staff Terminal</text>
+  </g>
+</svg>

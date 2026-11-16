@@ -1,49 +1,63 @@
-import React, { useState } from 'react';
-import { LoginPage } from './pages/LoginPage';
-import { DashboardPage } from './pages/DashboardPage';
-import { LayoutDashboard, LogIn, ExternalLink } from 'lucide-react';
+import React from 'react';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { GatewayPage } from './pages/GatewayPage';
+import { SuperAdminLoginPage } from './pages/super-admin/SuperAdminLoginPage';
+import { SuperAdminDashboard } from './pages/super-admin/SuperAdminDashboard';
+import { AdminLoginPage } from './pages/admin/AdminLoginPage';
+import { AdminDashboard } from './pages/admin/AdminDashboard';
+import { StaffLoginPage } from './pages/staff/StaffLoginPage';
+import { StaffDashboard } from './pages/staff/StaffDashboard';
+import { NotFoundPage } from './pages/NotFoundPage';
+import { ProtectedRoute } from './routes/ProtectedRoute';
 
 export const App: React.FC = () => {
-  const [currentView, setCurrentView] = useState<'login' | 'dashboard'>('login');
-
   return (
-    <div className="relative min-h-screen">
-      {/* Floating Demo View Switcher Header (discreet, top-center) */}
-      <div className="fixed top-3 left-1/2 -translate-x-1/2 z-50 bg-[#16171b]/90 backdrop-blur-md border border-white/10 px-3 py-1.5 rounded-full shadow-2xl flex items-center gap-2">
-        <button
-          onClick={() => setCurrentView('login')}
-          className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold transition ${
-            currentView === 'login'
-              ? 'bg-blue-600 text-white shadow-md'
-              : 'text-gray-400 hover:text-white'
-          }`}
-        >
-          <LogIn className="w-3.5 h-3.5" />
-          Login Portal (Image 1)
-        </button>
+    <BrowserRouter>
+      <Routes>
+        {/* Main Public Gateway / Portal Selector */}
+        <Route path="/" element={<GatewayPage />} />
 
-        <span className="text-gray-600 text-xs">|</span>
+        {/* Portal 1: Super Admin */}
+        <Route path="/super-admin/login" element={<SuperAdminLoginPage />} />
+        <Route
+          path="/super-admin/dashboard"
+          element={
+            <ProtectedRoute requiredRole="SUPER_ADMIN" loginPath="/super-admin/login">
+              <SuperAdminDashboard />
+            </ProtectedRoute>
+          }
+        />
 
-        <button
-          onClick={() => setCurrentView('dashboard')}
-          className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold transition ${
-            currentView === 'dashboard'
-              ? 'bg-[#df7e26] text-white shadow-md'
-              : 'text-gray-400 hover:text-white'
-          }`}
-        >
-          <LayoutDashboard className="w-3.5 h-3.5" />
-          Warm Dashboard (Image 2)
-        </button>
-      </div>
+        {/* Portal 2: Restaurant Admin */}
+        <Route path="/admin/login" element={<AdminLoginPage />} />
+        <Route
+          path="/admin/dashboard"
+          element={
+            <ProtectedRoute requiredRole="RESTAURANT_ADMIN" loginPath="/admin/login">
+              <AdminDashboard />
+            </ProtectedRoute>
+          }
+        />
 
-      {/* Render Selected View */}
-      {currentView === 'login' ? (
-        <LoginPage onLoginSuccess={() => setCurrentView('dashboard')} />
-      ) : (
-        <DashboardPage onLogout={() => setCurrentView('login')} />
-      )}
-    </div>
+        {/* Portal 3: Staff Service Terminal */}
+        <Route path="/staff/login" element={<StaffLoginPage />} />
+        <Route
+          path="/staff/dashboard"
+          element={
+            <ProtectedRoute requiredRole="STAFF" loginPath="/staff/login">
+              <StaffDashboard />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Redirect generic /login to Admin login */}
+        <Route path="/login" element={<Navigate to="/admin/login" replace />} />
+        <Route path="/dashboard" element={<Navigate to="/admin/dashboard" replace />} />
+
+        {/* 404 Catch-All */}
+        <Route path="*" element={<NotFoundPage />} />
+      </Routes>
+    </BrowserRouter>
   );
 };
 

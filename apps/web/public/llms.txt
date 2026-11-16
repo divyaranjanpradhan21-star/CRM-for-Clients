@@ -1,0 +1,20 @@
+# DinePulse — Enterprise Cafe & Restaurant CRM SaaS System
+
+> DinePulse is an enterprise multi-tenant Customer Relationship Management SaaS platform architected for cafes, dining restaurants, food chains, and multi-branch hospitality groups.
+
+## Portal Architecture
+- **Super Admin Portal** (`/super-admin/login`, `/super-admin/dashboard`): Platform-wide command center for managing tenant restaurant organizations, plan quotas, global audit trails, and platform telemetry.
+- **Restaurant Admin Portal** (`/admin/login`, `/admin/dashboard`): Operational headquarters for managing restaurant outlets, floor plans, real-time table statuses, reservation schedules, customer 360° profiles, POS orders, menu categories, loyalty programs, and financial analytics.
+- **Staff Portal** (`/staff/login`, `/staff/dashboard`): High-speed, mobile-responsive touch terminal for floor managers, servers, and hosts for rapid customer registration, table seating, active order status tracking, and assigned shift tasks.
+
+## Security & Tenancy
+- **Database**: PostgreSQL on Supabase with strict tenant boundary enforcement (`organization_id` & `branch_id`).
+- **Access Control**: Granular Role-Based Access Control (RBAC) enforced across API middleware, frontend route guards, and Row Level Security (RLS) policies.
+- **Authentication**: JWT verification with hardened session rotation and audit logging.
+
+## Public Endpoints
+- Portal Gateway: https://dinepulsecrm.com/
+- Super Admin Login: https://dinepulsecrm.com/super-admin/login
+- Restaurant Admin Login: https://dinepulsecrm.com/admin/login
+- Staff Portal Login: https://dinepulsecrm.com/staff/login
+- Health API: https://dinepulsecrm.com/api/v1/health
