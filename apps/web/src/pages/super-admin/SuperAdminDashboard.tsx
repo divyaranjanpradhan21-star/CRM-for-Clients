@@ -5,6 +5,7 @@ import { clearCurrentSession, getCurrentUser } from '../../lib/auth';
 import { supabase } from '../../lib/supabase';
 import { OrganizationsPage } from './OrganizationsPage';
 import { SubscriptionsPage } from './SubscriptionsPage';
+import { UserManagementPage } from './UserManagementPage';
 import {
   LayoutDashboard,
   Building2,
@@ -64,11 +65,13 @@ export const SuperAdminDashboard: React.FC = () => {
   const currentUser = getCurrentUser();
 
   // Navigation tab
-  const [activeTab, setActiveTab] = useState<'overview' | 'organizations' | 'subscriptions' | 'customers' | 'reservations' | 'orders' | 'campaigns' | 'staff'>(
+  const [activeTab, setActiveTab] = useState<'overview' | 'organizations' | 'subscriptions' | 'users' | 'customers' | 'reservations' | 'orders' | 'campaigns' | 'staff'>(
     location.pathname.includes('organizations')
       ? 'organizations'
       : location.pathname.includes('subscriptions')
       ? 'subscriptions'
+      : location.pathname.includes('users')
+      ? 'users'
       : 'overview'
   );
 
@@ -367,6 +370,7 @@ export const SuperAdminDashboard: React.FC = () => {
                   { id: 'overview', label: 'Dashboard', icon: LayoutDashboard },
                   { id: 'organizations', label: 'Organizations', icon: Building2 },
                   { id: 'subscriptions', label: 'Subscriptions', icon: CreditCard },
+                  { id: 'users', label: 'User Management', icon: Users },
                   { id: 'customers', label: 'Patrons & CRM', icon: Users },
                   { id: 'reservations', label: 'Reservations', icon: Calendar },
                   { id: 'orders', label: 'Orders & POS', icon: Receipt },
@@ -417,6 +421,8 @@ export const SuperAdminDashboard: React.FC = () => {
               <OrganizationsPage />
             ) : activeTab === 'subscriptions' ? (
               <SubscriptionsPage />
+            ) : activeTab === 'users' ? (
+              <UserManagementPage />
             ) : (
               <div className="p-6 lg:p-8 space-y-6">
             {/* ── TOP SECTION: RHYTHMIC FEATURE CARDS (Matching "My Ongoing Cases" in Image 1) ── */}

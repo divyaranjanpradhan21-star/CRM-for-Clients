@@ -500,48 +500,46 @@ export const UnifiedLoginPage: React.FC = () => {
             </p>
           </div>
 
-          {/* ── REALISTIC DOME FOLIAGE ARCH DIVIDER ── */}
+          {/* ── NATURAL BOTANICAL BUSH SILHOUETTE DIVIDER ── */}
           <div className="bg-[#EFEACA] relative overflow-hidden" style={{ marginTop: '-2px' }}>
             <svg
-              viewBox="0 0 700 160"
+              viewBox="0 0 500 110"
               preserveAspectRatio="none"
               className="w-full block"
-              style={{ height: '100px', display: 'block', marginBottom: '-2px' }}
+              style={{ height: '80px', display: 'block', marginBottom: '-2px' }}
               xmlns="http://www.w3.org/2000/svg"
               fill="#557D3E"
             >
-              {/* Large dome base — fills bottom solidly */}
-              <ellipse cx="350" cy="300" rx="370" ry="250" />
-
-              {/* ── Dome rim: jagged leaf-silhouette edge all across the arc ── */}
-              {/* Left side leaves */}
-              <path d="M 0,145 Q 8,130 14,120 Q 18,112 12,105 Q 20,110 22,122 Q 28,110 35,100 Q 38,92 32,86 Q 42,91 43,104 Q 50,90 58,80 Q 62,71 55,65 Q 66,70 67,84 Q 75,68 84,56 Q 88,46 80,40 Q 93,46 93,62 Q 102,46 112,33 Q 116,22 108,17 Q 122,22 121,38 Q 132,22 143,10 Q 148,0 139,−4 Q 154,2 152,18 Q 164,3 176,−8 Q 182,−17 173,−22 Q 188,−15 185,2 Q 198,−12 212,−20 Q 218,−29 209,−34 Q 225,−27 221,−10 Q 235,−24 250,−30 Q 257,−39 248,−44 Q 264,−36 259,−19 Q 273,−33 288,−38 Q 296,−47 287,−52 Q 303,−44 297,−27 Q 312,−40 328,−44 Q 336,−52 327,−57 Q 343,−49 337,−32 Q 352,−45 368,−48 Q 376,−56 367,−61 Q 383,−53 377,−36 Q 392,−49 408,−51 Q 416,−59 408,−64 Q 423,−56 417,−39 Q 432,−52 448,−53 Q 456,−61 448,−66 Q 463,−58 457,−41 Q 471,−53 486,−53 Q 494,−60 487,−65 Q 501,−57 496,−41 Q 509,−52 523,−50 Q 530,−57 524,−62 Q 538,−53 532,−38 Q 545,−49 558,−46 Q 565,−53 559,−58 Q 572,−49 567,−33 Q 579,−44 591,−40 Q 598,−47 592,−52 Q 605,−43 600,−27 Q 611,−37 622,−32 Q 629,−38 623,−43 Q 636,−35 631,−20 Q 641,−29 651,−23 Q 657,−29 652,−34 Q 664,−26 659,−12 Q 668,−20 677,−13 Q 683,−19 678,−23 Q 689,−16 685,−3 L 700,10 L 700,160 L 0,160 Z" />
-
-              {/* Additional leaf detail clusters — left zone */}
-              <path d="M 25,118 Q 30,105 38,98 Q 36,110 30,120 Z" />
-              <path d="M 50,100 Q 56,86 65,78 Q 62,92 56,102 Z" />
-              <path d="M 75,82 Q 82,67 92,59 Q 88,74 82,85 Z" />
-              <path d="M 102,62 Q 110,46 121,38 Q 116,54 110,65 Z" />
-              <path d="M 130,42 Q 139,25 151,16 Q 145,33 139,45 Z" />
-
-              {/* Middle zone leaf details */}
-              <path d="M 165,20 Q 175,2 188,−5 Q 182,14 175,26 Z" />
-              <path d="M 200,4 Q 211,−13 225,−19 Q 218,0 210,12 Z" />
-              <path d="M 237,−10 Q 249,−27 264,−32 Q 256,−13 247,0 Z" />
-              <path d="M 275,−22 Q 287,−39 303,−43 Q 294,−24 285,−11 Z" />
-              <path d="M 315,−30 Q 328,−46 344,−49 Q 335,−30 326,−17 Z" />
-              <path d="M 356,−34 Q 369,−50 385,−52 Q 376,−33 367,−20 Z" />
-              <path d="M 396,−32 Q 409,−48 425,−50 Q 416,−31 407,−18 Z" />
-              <path d="M 436,−26 Q 449,−42 465,−43 Q 456,−24 447,−11 Z" />
-
-              {/* Right zone leaf details */}
-              <path d="M 475,−18 Q 487,−33 503,−33 Q 494,−15 485,−2 Z" />
-              <path d="M 513,−8 Q 524,−22 539,−21 Q 530,−4 522,8 Z" />
-              <path d="M 549,2 Q 560,−11 574,−9 Q 565,8 557,20 Z" />
-              <path d="M 582,14 Q 593,2 606,4 Q 598,20 590,32 Z" />
-              <path d="M 613,28 Q 623,16 635,19 Q 627,34 619,45 Z" />
-              <path d="M 641,44 Q 650,33 661,36 Q 654,51 646,61 Z" />
-              <path d="M 666,62 Q 674,51 684,55 Q 677,69 670,78 Z" />
+              {/* Single solid, connected organic bush silhouette forming a lush natural mound */}
+              <path d="M 0,110 L 0,80
+                C 12,80 18,74 25,78
+                C 32,68 45,66 54,74
+                C 62,62 76,60 86,70
+                C 96,54 114,50 126,62
+                C 136,44 156,40 170,52
+                C 182,32 204,28 220,40
+                C 232,18 256,15 272,30
+                C 288,14 312,16 326,30
+                C 340,18 364,22 376,36
+                C 390,26 410,34 422,48
+                C 434,40 452,50 460,64
+                C 468,58 484,68 492,80
+                C 496,86 498,90 500,92
+                L 500,110 Z"
+              />
+              {/* Connected foliage leaf lobes along the crest (solidly embedded in the mound) */}
+              <circle cx="55" cy="70" r="10" />
+              <circle cx="88" cy="62" r="11" />
+              <circle cx="128" cy="54" r="13" />
+              <circle cx="170" cy="44" r="14" />
+              <circle cx="218" cy="32" r="15" />
+              <circle cx="250" cy="22" r="13" />
+              <circle cx="275" cy="24" r="14" />
+              <circle cx="312" cy="22" r="14" />
+              <circle cx="348" cy="26" r="14" />
+              <circle cx="388" cy="34" r="13" />
+              <circle cx="430" cy="46" r="12" />
+              <circle cx="470" cy="60" r="11" />
             </svg>
           </div>
 
