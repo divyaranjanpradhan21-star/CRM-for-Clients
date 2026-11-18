@@ -87,6 +87,22 @@ export const App: React.FC = () => {
             </ProtectedRoute>
           }
         />
+        <Route
+          path="/admin/employees"
+          element={
+            <ProtectedRoute requiredRole="RESTAURANT_ADMIN" loginPath="/login">
+              <AdminDashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/roles"
+          element={
+            <ProtectedRoute requiredRole="RESTAURANT_ADMIN" loginPath="/login">
+              <AdminDashboard />
+            </ProtectedRoute>
+          }
+        />
 
         {/* Portal 3: Staff Service Terminal Dashboard (Protected) */}
         <Route

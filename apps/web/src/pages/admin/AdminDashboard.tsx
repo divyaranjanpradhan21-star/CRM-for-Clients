@@ -4,6 +4,8 @@ import { SEOHead } from '../../components/SEOHead';
 import { clearCurrentSession, getCurrentUser } from '../../lib/auth';
 import { supabase } from '../../lib/supabase';
 import { BranchManagementView } from './BranchManagementView';
+import { EmployeeManagementView } from './EmployeeManagementView';
+import { RolePermissionsView } from './RolePermissionsView';
 import {
   LayoutDashboard,
   Receipt,
@@ -48,7 +50,8 @@ import {
   Eye,
   Check,
   Coffee,
-  HelpCircle
+  HelpCircle,
+  ShieldCheck
 } from 'lucide-react';
 import {
   fetchAdminDashboardMetrics,
@@ -99,8 +102,16 @@ export const AdminDashboard: React.FC = () => {
 
   // Navigation tab
   const [activeTab, setActiveTab] = useState<
-    'overview' | 'branches' | 'orders' | 'reservations' | 'customers' | 'menu' | 'staff' | 'campaigns' | 'feedback'
-  >(location.pathname.includes('branches') ? 'branches' : 'overview');
+    'overview' | 'branches' | 'employees' | 'roles' | 'orders' | 'reservations' | 'customers' | 'menu' | 'staff' | 'campaigns' | 'feedback'
+  >(
+    location.pathname.includes('branches')
+      ? 'branches'
+      : location.pathname.includes('employees')
+      ? 'employees'
+      : location.pathname.includes('roles')
+      ? 'roles'
+      : 'overview'
+  );
 
   // Filters State
   const [filters, setFilters] = useState<DashboardFilterState>({
@@ -430,6 +441,8 @@ export const AdminDashboard: React.FC = () => {
                 {[
                   { id: 'overview', label: 'Executive Overview', icon: LayoutDashboard },
                   { id: 'branches', label: 'Branch Management', icon: Building, badge: '4 outlets' },
+                  { id: 'employees', label: 'Employee Management', icon: UserCheck },
+                  { id: 'roles', label: 'Roles & Permissions', icon: ShieldCheck },
                   { id: 'customers', label: 'Patrons & Retention', icon: Users, badge: m.totalCustomers.toLocaleString() },
                   { id: 'reservations', label: 'Table Reservations', icon: Calendar, badge: m.pendingReservations > 0 ? `${m.pendingReservations} new` : undefined },
                   { id: 'orders', label: 'Orders & Live POS', icon: Receipt, badge: `${m.ordersReceived + m.ordersPreparing} live` },
@@ -508,6 +521,15 @@ export const AdminDashboard: React.FC = () => {
                   setFilters({ ...filters, branch: b });
                   setActiveTab('overview');
                 }}
+              />
+            ) : activeTab === 'employees' ? (
+              <EmployeeManagementView
+                orgId={orgId}
+                currentUserRole={currentUser?.role}
+              />
+            ) : activeTab === 'roles' ? (
+              <RolePermissionsView
+                orgId={orgId}
               />
             ) : (
               <>
