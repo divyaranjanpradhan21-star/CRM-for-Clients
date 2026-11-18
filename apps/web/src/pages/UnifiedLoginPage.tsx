@@ -464,23 +464,24 @@ export const UnifiedLoginPage: React.FC = () => {
         </div>
       </footer>
 
-      {/* ── Login Form Overlay (Right-aligned on desktop - Matcha Foliage Card) ── */}
+      {/* ── Login Form Overlay (Right-aligned on desktop - Warm Cream #EFEACA Theme) ── */}
       <div className="absolute inset-0 z-20 flex items-center justify-center lg:justify-end p-4 sm:p-6 lg:pr-14 xl:pr-24 overflow-y-auto">
         <div
-          className="w-full max-w-[370px] rounded-[32px] overflow-hidden transition-all duration-300 my-auto border border-[#d6cfad]/70 shadow-2xl"
+          className="w-full max-w-[370px] rounded-[32px] overflow-hidden transition-all duration-300 my-auto border border-[#d6cfad] shadow-2xl"
           style={{
-            boxShadow: '0 30px 70px -15px rgba(25, 45, 15, 0.5), 0 10px 25px -5px rgba(0, 0, 0, 0.3)',
+            backgroundColor: '#EFEACA',
+            boxShadow: '0 30px 70px -15px rgba(45, 35, 20, 0.35), 0 10px 25px -5px rgba(0, 0, 0, 0.15)',
           }}
         >
-          {/* ── TOP SECTION: Cream Matcha Foam with Brand Logo & Typography ── */}
-          <div className="bg-[#EFEACA] pt-6 px-6 pb-2 text-center select-none">
+          {/* ── TOP SECTION: Cream Header with Brand Logo & Typography ── */}
+          <div className="pt-6 px-6 pb-2 text-center select-none bg-[#EFEACA]">
             {/* Logo Badge */}
             <div className="w-20 h-20 mx-auto mb-2 flex items-center justify-center hover:scale-105 transition-transform">
               <img
                 src="/logo.png"
                 alt="Cafe's Corner"
                 className="w-full h-full object-contain"
-                style={{ filter: 'drop-shadow(0 6px 14px rgba(50, 70, 30, 0.28))' }}
+                style={{ filter: 'drop-shadow(0 6px 14px rgba(50, 70, 30, 0.22))' }}
               />
             </div>
 
@@ -494,69 +495,66 @@ export const UnifiedLoginPage: React.FC = () => {
               COFFEE SHOP
             </p>
 
-            {/* Tagline matching the design */}
+            {/* Tagline */}
             <p className="text-[9px] uppercase tracking-[0.2em] font-bold text-[#6B8B50] mt-1.5">
               FIND A COFFEE STORE NEAR YOU
             </p>
           </div>
 
-          {/* ── NATURAL BOTANICAL BUSH SILHOUETTE DIVIDER ── */}
-          <div className="bg-[#EFEACA] relative overflow-hidden" style={{ marginTop: '-2px' }}>
+          {/* ── BOTANICAL BUSH ACCENT DIVIDER ── */}
+          <div className="bg-[#EFEACA] relative overflow-hidden -mt-1 select-none">
             <svg
-              viewBox="0 0 500 110"
+              viewBox="0 0 500 70"
               preserveAspectRatio="none"
               className="w-full block"
-              style={{ height: '80px', display: 'block', marginBottom: '-2px' }}
+              style={{ height: '45px', display: 'block', marginBottom: '-1px' }}
               xmlns="http://www.w3.org/2000/svg"
-              fill="#557D3E"
+              fill="#3A5726"
             >
-              {/* Single solid, connected organic bush silhouette forming a lush natural mound */}
-              <path d="M 0,110 L 0,80
-                C 12,80 18,74 25,78
-                C 32,68 45,66 54,74
-                C 62,62 76,60 86,70
-                C 96,54 114,50 126,62
-                C 136,44 156,40 170,52
-                C 182,32 204,28 220,40
-                C 232,18 256,15 272,30
-                C 288,14 312,16 326,30
-                C 340,18 364,22 376,36
-                C 390,26 410,34 422,48
-                C 434,40 452,50 460,64
-                C 468,58 484,68 492,80
-                C 496,86 498,90 500,92
-                L 500,110 Z"
+              <path d="M 0,70 L 0,45
+                C 15,45 25,38 35,42
+                C 45,32 60,30 72,38
+                C 85,26 102,24 116,34
+                C 130,18 152,15 168,26
+                C 182,10 206,8 224,18
+                C 238,4 262,2 278,14
+                C 294,4 316,6 332,16
+                C 346,8 368,12 382,22
+                C 396,16 414,22 426,32
+                C 438,26 454,34 464,44
+                C 474,38 488,44 500,52
+                L 500,70 Z"
+                fillOpacity="0.12"
               />
-              {/* Connected foliage leaf lobes along the crest (solidly embedded in the mound) */}
-              <circle cx="55" cy="70" r="10" />
-              <circle cx="88" cy="62" r="11" />
-              <circle cx="128" cy="54" r="13" />
-              <circle cx="170" cy="44" r="14" />
-              <circle cx="218" cy="32" r="15" />
-              <circle cx="250" cy="22" r="13" />
-              <circle cx="275" cy="24" r="14" />
-              <circle cx="312" cy="22" r="14" />
-              <circle cx="348" cy="26" r="14" />
-              <circle cx="388" cy="34" r="13" />
-              <circle cx="430" cy="46" r="12" />
-              <circle cx="470" cy="60" r="11" />
+              <path d="M 0,70 L 0,55
+                C 20,55 35,48 50,52
+                C 70,44 95,42 115,50
+                C 135,38 165,36 185,46
+                C 205,32 235,30 255,40
+                C 275,32 305,34 325,44
+                C 345,36 375,40 395,50
+                C 415,44 440,48 460,56
+                C 480,50 495,54 500,60
+                L 500,70 Z"
+                fillOpacity="0.22"
+              />
             </svg>
           </div>
 
-          {/* ── BOTTOM SECTION: Solid Matcha Green Container with Form Elements ── */}
-          <div className="bg-[#557D3E] px-6 sm:px-7 pb-6 pt-1 text-white">
+          {/* ── CARD BODY SECTION: Solid #EFEACA Cream Theme ── */}
+          <div className="bg-[#EFEACA] px-6 sm:px-7 pb-6 pt-1 text-[#1E3512]">
             {/* Quick Role Fill Pills (LOGIN step only) */}
             {step === 'LOGIN' && (
-              <div className="mb-3.5 p-1 rounded-2xl flex items-center justify-between text-xs bg-[#446531]/80 border border-[#6F9555]/60">
-                <span className="text-[10px] font-bold uppercase tracking-wider px-2 text-[#E2EDD8]">Role:</span>
+              <div className="mb-3.5 p-1 rounded-2xl flex items-center justify-between text-xs bg-[#E4DCB8]/80 border border-[#CDC498]">
+                <span className="text-[10px] font-bold uppercase tracking-wider px-2 text-[#4F7037]">Role:</span>
                 <div className="flex gap-1">
                   <button
                     type="button"
                     onClick={() => fillRole('SUPER_ADMIN')}
                     className={`px-2 py-1 rounded-xl text-[10px] font-extrabold uppercase tracking-wide transition ${
                       email.includes('superadmin')
-                        ? 'bg-[#F5EFD4] text-[#365322] shadow-sm'
-                        : 'text-[#D8E6CD] hover:text-white hover:bg-white/10'
+                        ? 'bg-[#3A5726] text-[#FAF8EE] shadow-sm'
+                        : 'text-[#4F7037] hover:text-[#233917] hover:bg-[#DCD4AF]'
                     }`}
                   >
                     Super Admin
@@ -566,8 +564,8 @@ export const UnifiedLoginPage: React.FC = () => {
                     onClick={() => fillRole('RESTAURANT_ADMIN')}
                     className={`px-2 py-1 rounded-xl text-[10px] font-extrabold uppercase tracking-wide transition ${
                       email.includes('admin@')
-                        ? 'bg-[#F5EFD4] text-[#365322] shadow-sm'
-                        : 'text-[#D8E6CD] hover:text-white hover:bg-white/10'
+                        ? 'bg-[#3A5726] text-[#FAF8EE] shadow-sm'
+                        : 'text-[#4F7037] hover:text-[#233917] hover:bg-[#DCD4AF]'
                     }`}
                   >
                     Admin
@@ -577,8 +575,8 @@ export const UnifiedLoginPage: React.FC = () => {
                     onClick={() => fillRole('STAFF')}
                     className={`px-2 py-1 rounded-xl text-[10px] font-extrabold uppercase tracking-wide transition ${
                       email.includes('staff')
-                        ? 'bg-[#F5EFD4] text-[#365322] shadow-sm'
-                        : 'text-[#D8E6CD] hover:text-white hover:bg-white/10'
+                        ? 'bg-[#3A5726] text-[#FAF8EE] shadow-sm'
+                        : 'text-[#4F7037] hover:text-[#233917] hover:bg-[#DCD4AF]'
                     }`}
                   >
                     Staff
@@ -589,15 +587,15 @@ export const UnifiedLoginPage: React.FC = () => {
 
             {/* Notification & Feedback Alerts */}
             {error && (
-              <div className="mb-3 p-2.5 rounded-xl text-xs flex items-center gap-2 font-medium bg-[#7F2626]/85 border border-[#B91C1C] text-[#FECACA]">
-                <AlertTriangle className="w-4 h-4 shrink-0 text-[#FCA5A5]" />
+              <div className="mb-3 p-2.5 rounded-xl text-xs flex items-center gap-2 font-medium bg-[#FEE2E2] border border-[#F87171] text-[#991B1B]">
+                <AlertTriangle className="w-4 h-4 shrink-0 text-[#DC2626]" />
                 <span>{error}</span>
               </div>
             )}
 
             {successMsg && (
-              <div className="mb-3 p-2.5 rounded-xl text-xs flex items-center gap-2 font-medium bg-[#1E4D2B]/85 border border-[#22C55E] text-[#DCFCE7]">
-                <CheckCircle2 className="w-4 h-4 shrink-0 text-[#86EFAC]" />
+              <div className="mb-3 p-2.5 rounded-xl text-xs flex items-center gap-2 font-medium bg-[#DCFCE7] border border-[#4ADE80] text-[#166534]">
+                <CheckCircle2 className="w-4 h-4 shrink-0 text-[#16A34A]" />
                 <span>{successMsg}</span>
               </div>
             )}
@@ -606,7 +604,7 @@ export const UnifiedLoginPage: React.FC = () => {
             {step === 'LOGIN' && (
               <>
                 <div className="text-center mb-3">
-                  <h1 className="text-xs font-black tracking-widest uppercase text-white drop-shadow-xs">
+                  <h1 className="text-xs font-black tracking-widest uppercase text-[#3A5726]">
                     LOG IN TO YOUR ACCOUNT
                   </h1>
                 </div>
@@ -619,7 +617,7 @@ export const UnifiedLoginPage: React.FC = () => {
                       onChange={(e) => setEmail(e.target.value)}
                       placeholder="email"
                       required
-                      className="w-full px-4 py-2.5 rounded-xl text-[#1E3512] placeholder-[#4F7339] text-xs font-semibold focus:outline-none transition bg-[#96BA7B] border border-[#7FA562] focus:bg-[#A3C886] focus:border-[#F5EFD4] shadow-inner"
+                      className="w-full px-4 py-2.5 rounded-xl text-[#1E3512] placeholder-[#7F9370] text-xs font-semibold focus:outline-none transition bg-[#FAF7EC] border border-[#CDC498] focus:border-[#3A5726] focus:bg-white shadow-xs"
                     />
                   </div>
 
@@ -631,12 +629,12 @@ export const UnifiedLoginPage: React.FC = () => {
                         onChange={(e) => setPassword(e.target.value)}
                         placeholder="password"
                         required
-                        className="w-full px-4 py-2.5 rounded-xl text-[#1E3512] placeholder-[#4F7339] text-xs font-semibold focus:outline-none transition pr-10 bg-[#96BA7B] border border-[#7FA562] focus:bg-[#A3C886] focus:border-[#F5EFD4] shadow-inner"
+                        className="w-full px-4 py-2.5 rounded-xl text-[#1E3512] placeholder-[#7F9370] text-xs font-semibold focus:outline-none transition pr-10 bg-[#FAF7EC] border border-[#CDC498] focus:border-[#3A5726] focus:bg-white shadow-xs"
                       />
                       <button
                         type="button"
                         onClick={() => setShowPassword(!showPassword)}
-                        className="absolute right-3 top-2.5 transition text-[#365322] hover:text-[#1E3512]"
+                        className="absolute right-3 top-2.5 transition text-[#3A5726] hover:text-[#1E3512]"
                       >
                         {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                       </button>
@@ -644,13 +642,13 @@ export const UnifiedLoginPage: React.FC = () => {
                   </div>
 
                   <div className="flex items-center justify-between text-xs pt-0.5">
-                    <label className="flex items-center gap-1.5 cursor-pointer select-none text-[#F5EFD4] text-[11px] font-medium">
+                    <label className="flex items-center gap-1.5 cursor-pointer select-none text-[#3A5726] text-[11px] font-semibold">
                       <input
                         type="checkbox"
                         checked={rememberMe}
                         onChange={(e) => setRememberMe(e.target.checked)}
-                        className="rounded border-[#7FA562] w-3.5 h-3.5"
-                        style={{ accentColor: '#365322' }}
+                        className="rounded border-[#CDC498] w-3.5 h-3.5"
+                        style={{ accentColor: '#3A5726' }}
                       />
                       <span>Remember me</span>
                     </label>
@@ -662,7 +660,7 @@ export const UnifiedLoginPage: React.FC = () => {
                         setResetEmail(email);
                         setStep('FORGOT_REQUEST');
                       }}
-                      className="underline underline-offset-2 transition font-semibold text-[11px] text-[#F5EFD4] hover:text-white"
+                      className="underline underline-offset-2 transition font-bold text-[11px] text-[#3A5726] hover:text-[#1E3512]"
                     >
                       Forgot password ?
                     </button>
@@ -672,11 +670,11 @@ export const UnifiedLoginPage: React.FC = () => {
                     <button
                       type="submit"
                       disabled={isLoading || lockoutRemainingSec > 0}
-                      className="w-full font-black text-xs uppercase tracking-wider py-3 rounded-xl shadow-md transition-all flex items-center justify-center gap-2 disabled:opacity-50 bg-[#F5EFD4] hover:bg-[#FFF9DE] text-[#365322]"
+                      className="w-full font-black text-xs uppercase tracking-wider py-3.5 rounded-xl shadow-md transition-all flex items-center justify-center gap-2 disabled:opacity-50 bg-[#3A5726] hover:bg-[#2C441D] text-[#FAF8EE]"
                     >
                       {isLoading ? (
                         <span className="flex items-center gap-2">
-                          <span className="w-3.5 h-3.5 border-2 border-[#365322]/30 border-t-[#365322] rounded-full animate-spin" />
+                          <span className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                           Authenticating...
                         </span>
                       ) : lockoutRemainingSec > 0 ? (
@@ -688,39 +686,39 @@ export const UnifiedLoginPage: React.FC = () => {
                   </div>
                 </form>
 
-                {/* Social Login Divider & Icons matching design */}
+                {/* Social Login Divider & Icons */}
                 <div className="pt-3">
                   <div className="relative flex items-center justify-center">
-                    <div className="border-t border-[#769C5C] w-full" />
-                    <span className="bg-[#557D3E] px-3 text-[9px] font-black uppercase tracking-widest text-[#D4E8C6]">
+                    <div className="border-t border-[#CDC498] w-full" />
+                    <span className="bg-[#EFEACA] px-3 text-[9px] font-black uppercase tracking-widest text-[#6B8B50]">
                       LOG IN WITH
                     </span>
-                    <div className="border-t border-[#769C5C] w-full" />
+                    <div className="border-t border-[#CDC498] w-full" />
                   </div>
 
                   <div className="flex items-center justify-center gap-3 pt-2">
                     <button
                       type="button"
                       title="Twitter / X"
-                      className="w-7 h-7 rounded-full bg-[#466932] hover:bg-[#3B5A2A] flex items-center justify-center transition border border-[#6E9354]"
+                      className="w-7 h-7 rounded-full bg-[#E4DCB8] hover:bg-[#D7CFAB] flex items-center justify-center transition border border-[#CDC498]"
                     >
-                      <svg className="w-3.5 h-3.5 fill-white" viewBox="0 0 24 24">
+                      <svg className="w-3.5 h-3.5 fill-[#3A5726]" viewBox="0 0 24 24">
                         <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
                       </svg>
                     </button>
                     <button
                       type="button"
                       title="Facebook"
-                      className="w-7 h-7 rounded-full bg-[#466932] hover:bg-[#3B5A2A] flex items-center justify-center transition border border-[#6E9354]"
+                      className="w-7 h-7 rounded-full bg-[#E4DCB8] hover:bg-[#D7CFAB] flex items-center justify-center transition border border-[#CDC498]"
                     >
-                      <svg className="w-3.5 h-3.5 fill-white" viewBox="0 0 24 24">
+                      <svg className="w-3.5 h-3.5 fill-[#3A5726]" viewBox="0 0 24 24">
                         <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
                       </svg>
                     </button>
                     <button
                       type="button"
                       title="Google"
-                      className="w-7 h-7 rounded-full bg-[#466932] hover:bg-[#3B5A2A] flex items-center justify-center transition border border-[#6E9354]"
+                      className="w-7 h-7 rounded-full bg-[#E4DCB8] hover:bg-[#D7CFAB] flex items-center justify-center transition border border-[#CDC498]"
                     >
                       <svg className="w-3.5 h-3.5" viewBox="0 0 24 24">
                         <path fill="#EA4335" d="M12 5c1.6 0 3 .6 4.1 1.7l3.1-3.1C17.3 1.8 14.8 1 12 1 7.5 1 3.7 3.6 1.9 7.3l3.7 2.9C6.5 7.4 9 5 12 5z"/>
@@ -732,9 +730,9 @@ export const UnifiedLoginPage: React.FC = () => {
                     <button
                       type="button"
                       title="Apple"
-                      className="w-7 h-7 rounded-full bg-[#466932] hover:bg-[#3B5A2A] flex items-center justify-center transition border border-[#6E9354]"
+                      className="w-7 h-7 rounded-full bg-[#E4DCB8] hover:bg-[#D7CFAB] flex items-center justify-center transition border border-[#CDC498]"
                     >
-                      <svg className="w-3.5 h-3.5 fill-white" viewBox="0 0 24 24">
+                      <svg className="w-3.5 h-3.5 fill-[#3A5726]" viewBox="0 0 24 24">
                         <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M15.97 6.37c.63-.77 1.06-1.85.94-2.93-.91.04-2.02.61-2.67 1.37-.58.67-1.09 1.77-.95 2.82 1.02.08 2.05-.49 2.68-1.26z"/>
                       </svg>
                     </button>
@@ -746,7 +744,7 @@ export const UnifiedLoginPage: React.FC = () => {
                       onClick={() => {
                         alert('To register a new restaurant organization or staff account, please contact the Super Admin or your branch administrator.');
                       }}
-                      className="text-[9px] font-bold uppercase tracking-wider text-[#F5EFD4] hover:underline"
+                      className="text-[9px] font-bold uppercase tracking-wider text-[#3A5726] hover:underline"
                     >
                       DON'T HAVE AN ACCOUNT? SIGN UP HERE
                     </button>
@@ -759,15 +757,15 @@ export const UnifiedLoginPage: React.FC = () => {
             {step === 'FORGOT_REQUEST' && (
               <div>
                 <div className="text-center mb-4">
-                  <h2 className="text-sm font-black tracking-wider uppercase text-white drop-shadow-xs">Reset Password</h2>
-                  <p className="text-[11px] mt-1 text-[#E2EDD8]">
+                  <h2 className="text-sm font-black tracking-wider uppercase text-[#3A5726]">Reset Password</h2>
+                  <p className="text-[11px] mt-1 text-[#5A7347]">
                     Enter your email to receive a 6-digit verification security code.
                   </p>
                 </div>
 
                 <form onSubmit={handleForgotRequest} className="space-y-3">
                   <div>
-                    <label className="block text-[11px] font-semibold mb-1 text-[#E2EDD8]">Registered Email</label>
+                    <label className="block text-[11px] font-semibold mb-1 text-[#3A5726]">Registered Email</label>
                     <div className="relative">
                       <input
                         type="email"
@@ -775,16 +773,16 @@ export const UnifiedLoginPage: React.FC = () => {
                         onChange={(e) => setResetEmail(e.target.value)}
                         placeholder="you@cafescorner.com"
                         required
-                        className="w-full px-4 py-2.5 rounded-xl text-[#1E3512] placeholder-[#4F7339] text-xs font-semibold focus:outline-none transition bg-[#96BA7B] border border-[#7FA562] focus:bg-[#A3C886] focus:border-[#F5EFD4] shadow-inner pr-10"
+                        className="w-full px-4 py-2.5 rounded-xl text-[#1E3512] placeholder-[#7F9370] text-xs font-semibold focus:outline-none transition bg-[#FAF7EC] border border-[#CDC498] focus:border-[#3A5726] focus:bg-white shadow-xs pr-10"
                       />
-                      <Mail className="absolute right-3.5 top-3 w-4 h-4 text-[#365322]" />
+                      <Mail className="absolute right-3.5 top-3 w-4 h-4 text-[#3A5726]" />
                     </div>
                   </div>
 
                   <button
                     type="submit"
                     disabled={isLoading}
-                    className="w-full font-black text-xs uppercase tracking-wider py-3 rounded-xl shadow-md transition-all flex items-center justify-center gap-2 bg-[#F5EFD4] hover:bg-[#FFF9DE] text-[#365322]"
+                    className="w-full font-black text-xs uppercase tracking-wider py-3.5 rounded-xl shadow-md transition-all flex items-center justify-center gap-2 bg-[#3A5726] hover:bg-[#2C441D] text-[#FAF8EE]"
                   >
                     {isLoading ? 'Dispatching Code...' : 'Send Verification Code'}
                     <ArrowRight className="w-3.5 h-3.5" />
@@ -794,7 +792,7 @@ export const UnifiedLoginPage: React.FC = () => {
                     <button
                       type="button"
                       onClick={() => setStep('LOGIN')}
-                      className="text-xs flex items-center gap-1.5 mx-auto transition text-[#F5EFD4] hover:underline"
+                      className="text-xs flex items-center gap-1.5 mx-auto transition text-[#3A5726] hover:underline font-semibold"
                     >
                       <ArrowLeft className="w-3.5 h-3.5" /> Back to Sign In
                     </button>
@@ -807,19 +805,18 @@ export const UnifiedLoginPage: React.FC = () => {
             {step === 'FORGOT_VERIFY' && (
               <div>
                 <div className="text-center mb-4">
-                  <h2 className="text-sm font-black tracking-wider uppercase text-white drop-shadow-xs">Enter Verification Code</h2>
-                  <p className="text-[11px] mt-1 text-[#E2EDD8]">
+                  <h2 className="text-sm font-black tracking-wider uppercase text-[#3A5726]">Enter Verification Code</h2>
+                  <p className="text-[11px] mt-1 text-[#5A7347]">
                     Enter the 6-digit code sent to <strong>{resetEmail}</strong>
                   </p>
                 </div>
 
-                {/* Simulation banner displaying generated code for easy testing */}
                 {generatedCodePreview && (
-                  <div className="mb-3 p-2.5 rounded-xl text-center bg-[#466932] border border-[#6F9555]">
-                    <span className="text-[9px] uppercase tracking-wider block font-mono text-[#D4E8C6]">
+                  <div className="mb-3 p-2.5 rounded-xl text-center bg-[#E4DCB8] border border-[#CDC498]">
+                    <span className="text-[9px] uppercase tracking-wider block font-mono text-[#5A7347]">
                       Dispatched Verification Code:
                     </span>
-                    <span className="text-xl font-black font-mono tracking-widest text-[#F5EFD4]">
+                    <span className="text-xl font-black font-mono tracking-widest text-[#3A5726]">
                       {generatedCodePreview}
                     </span>
                   </div>
@@ -827,7 +824,7 @@ export const UnifiedLoginPage: React.FC = () => {
 
                 <form onSubmit={handleVerifyCodeSubmit} className="space-y-3">
                   <div>
-                    <label className="block text-[11px] font-semibold mb-1 text-[#E2EDD8]">6-Digit Code</label>
+                    <label className="block text-[11px] font-semibold mb-1 text-[#3A5726]">6-Digit Code</label>
                     <input
                       type="text"
                       maxLength={6}
@@ -836,22 +833,22 @@ export const UnifiedLoginPage: React.FC = () => {
                       placeholder="123456"
                       required
                       autoFocus
-                      className="w-full px-4 py-2.5 rounded-xl text-[#1E3512] text-center font-mono text-base tracking-widest placeholder-[#4F7339] focus:outline-none transition bg-[#96BA7B] border border-[#7FA562] focus:bg-[#A3C886] focus:border-[#F5EFD4] shadow-inner font-bold"
+                      className="w-full px-4 py-2.5 rounded-xl text-[#1E3512] text-center font-mono text-base tracking-widest placeholder-[#7F9370] focus:outline-none transition bg-[#FAF7EC] border border-[#CDC498] focus:border-[#3A5726] focus:bg-white shadow-xs font-bold"
                     />
                   </div>
 
                   <button
                     type="submit"
-                    className="w-full font-black text-xs uppercase tracking-wider py-3 rounded-xl shadow-md transition-all bg-[#F5EFD4] hover:bg-[#FFF9DE] text-[#365322]"
+                    className="w-full font-black text-xs uppercase tracking-wider py-3.5 rounded-xl shadow-md transition-all bg-[#3A5726] hover:bg-[#2C441D] text-[#FAF8EE]"
                   >
                     Verify Code
                   </button>
 
-                  <div className="flex items-center justify-between text-xs pt-1 text-[#F5EFD4]">
+                  <div className="flex items-center justify-between text-xs pt-1 text-[#3A5726]">
                     <button
                       type="button"
                       onClick={() => setStep('FORGOT_REQUEST')}
-                      className="flex items-center gap-1 hover:underline"
+                      className="flex items-center gap-1 hover:underline font-semibold"
                     >
                       <ArrowLeft className="w-3.5 h-3.5" /> Change Email
                     </button>
@@ -875,15 +872,15 @@ export const UnifiedLoginPage: React.FC = () => {
             {step === 'FORGOT_NEW_PASSWORD' && (
               <div>
                 <div className="text-center mb-4">
-                  <h2 className="text-sm font-black tracking-wider uppercase text-white drop-shadow-xs">Create New Password</h2>
-                  <p className="text-[11px] mt-1 text-[#E2EDD8]">
+                  <h2 className="text-sm font-black tracking-wider uppercase text-[#3A5726]">Create New Password</h2>
+                  <p className="text-[11px] mt-1 text-[#5A7347]">
                     Set a secure password for <strong>{resetEmail}</strong>
                   </p>
                 </div>
 
                 <form onSubmit={handleNewPasswordSubmit} className="space-y-2.5">
                   <div>
-                    <label className="block text-[11px] font-semibold mb-1 text-[#E2EDD8]">New Password</label>
+                    <label className="block text-[11px] font-semibold mb-1 text-[#3A5726]">New Password</label>
                     <div className="relative">
                       <input
                         type={showNewPassword ? 'text' : 'password'}
@@ -891,12 +888,12 @@ export const UnifiedLoginPage: React.FC = () => {
                         onChange={(e) => setNewPassword(e.target.value)}
                         placeholder="••••••••••••"
                         required
-                        className="w-full px-4 py-2.5 rounded-xl text-[#1E3512] placeholder-[#4F7339] text-xs font-semibold focus:outline-none transition pr-10 bg-[#96BA7B] border border-[#7FA562] focus:bg-[#A3C886] focus:border-[#F5EFD4] shadow-inner"
+                        className="w-full px-4 py-2.5 rounded-xl text-[#1E3512] placeholder-[#7F9370] text-xs font-semibold focus:outline-none transition pr-10 bg-[#FAF7EC] border border-[#CDC498] focus:border-[#3A5726] focus:bg-white shadow-xs"
                       />
                       <button
                         type="button"
                         onClick={() => setShowNewPassword(!showNewPassword)}
-                        className="absolute right-3 top-2.5 transition text-[#365322] hover:text-[#1E3512]"
+                        className="absolute right-3 top-2.5 transition text-[#3A5726] hover:text-[#1E3512]"
                       >
                         {showNewPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                       </button>
@@ -904,21 +901,21 @@ export const UnifiedLoginPage: React.FC = () => {
                   </div>
 
                   <div>
-                    <label className="block text-[11px] font-semibold mb-1 text-[#E2EDD8]">Confirm New Password</label>
+                    <label className="block text-[11px] font-semibold mb-1 text-[#3A5726]">Confirm New Password</label>
                     <input
                       type="password"
                       value={confirmPassword}
                       onChange={(e) => setConfirmPassword(e.target.value)}
                       placeholder="••••••••••••"
                       required
-                      className="w-full px-4 py-2.5 rounded-xl text-[#1E3512] placeholder-[#4F7339] text-xs font-semibold focus:outline-none transition bg-[#96BA7B] border border-[#7FA562] focus:bg-[#A3C886] focus:border-[#F5EFD4] shadow-inner"
+                      className="w-full px-4 py-2.5 rounded-xl text-[#1E3512] placeholder-[#7F9370] text-xs font-semibold focus:outline-none transition bg-[#FAF7EC] border border-[#CDC498] focus:border-[#3A5726] focus:bg-white shadow-xs"
                     />
                   </div>
 
                   <button
                     type="submit"
                     disabled={isLoading}
-                    className="w-full font-black text-xs uppercase tracking-wider py-3 rounded-xl shadow-md transition-all bg-[#F5EFD4] hover:bg-[#FFF9DE] text-[#365322]"
+                    className="w-full font-black text-xs uppercase tracking-wider py-3.5 rounded-xl shadow-md transition-all bg-[#3A5726] hover:bg-[#2C441D] text-[#FAF8EE]"
                   >
                     {isLoading ? 'Updating Password...' : 'Save Password & Sign In'}
                   </button>
@@ -930,18 +927,18 @@ export const UnifiedLoginPage: React.FC = () => {
             {step === 'MFA_CHALLENGE' && (
               <div>
                 <div className="text-center mb-4">
-                  <div className="w-10 h-10 rounded-xl flex items-center justify-center mx-auto mb-2 bg-[#466932] border border-[#6F9555] text-[#F5EFD4]">
+                  <div className="w-10 h-10 rounded-xl flex items-center justify-center mx-auto mb-2 bg-[#E4DCB8] border border-[#CDC498] text-[#3A5726]">
                     <Smartphone className="w-5 h-5" />
                   </div>
-                  <h2 className="text-sm font-black tracking-wider uppercase text-white drop-shadow-xs">Two-Factor Authentication</h2>
-                  <p className="text-[11px] mt-1 text-[#E2EDD8]">
+                  <h2 className="text-sm font-black tracking-wider uppercase text-[#3A5726]">Two-Factor Authentication</h2>
+                  <p className="text-[11px] mt-1 text-[#5A7347]">
                     Super Admin role requires 2FA token confirmation. (Demo code: <strong>123456</strong>)
                   </p>
                 </div>
 
                 <form onSubmit={handleMfaSubmit} className="space-y-3">
                   <div>
-                    <label className="block text-[11px] font-semibold mb-1 text-[#E2EDD8]">MFA Security Token</label>
+                    <label className="block text-[11px] font-semibold mb-1 text-[#3A5726]">MFA Security Token</label>
                     <input
                       type="text"
                       maxLength={6}
@@ -950,13 +947,13 @@ export const UnifiedLoginPage: React.FC = () => {
                       placeholder="123456"
                       required
                       autoFocus
-                      className="w-full px-4 py-2.5 rounded-xl text-[#1E3512] text-center font-mono text-lg tracking-widest placeholder-[#4F7339] focus:outline-none transition bg-[#96BA7B] border border-[#7FA562] focus:bg-[#A3C886] focus:border-[#F5EFD4] shadow-inner font-bold"
+                      className="w-full px-4 py-2.5 rounded-xl text-[#1E3512] text-center font-mono text-lg tracking-widest placeholder-[#7F9370] focus:outline-none transition bg-[#FAF7EC] border border-[#CDC498] focus:border-[#3A5726] focus:bg-white shadow-xs font-bold"
                     />
                   </div>
 
                   <button
                     type="submit"
-                    className="w-full font-black text-xs uppercase tracking-wider py-3 rounded-xl shadow-md transition-all bg-[#F5EFD4] hover:bg-[#FFF9DE] text-[#365322]"
+                    className="w-full font-black text-xs uppercase tracking-wider py-3.5 rounded-xl shadow-md transition-all bg-[#3A5726] hover:bg-[#2C441D] text-[#FAF8EE]"
                   >
                     Verify &amp; Enter Platform
                   </button>
@@ -965,7 +962,7 @@ export const UnifiedLoginPage: React.FC = () => {
                     <button
                       type="button"
                       onClick={() => setStep('LOGIN')}
-                      className="text-xs flex items-center gap-1.5 mx-auto transition text-[#F5EFD4] hover:underline"
+                      className="text-xs flex items-center gap-1.5 mx-auto transition text-[#3A5726] hover:underline font-semibold"
                     >
                       <ArrowLeft className="w-3.5 h-3.5" /> Cancel MFA
                     </button>
@@ -975,17 +972,17 @@ export const UnifiedLoginPage: React.FC = () => {
             )}
 
             {/* Footer Security Audit Link */}
-            <div className="pt-3 mt-3.5 flex items-center justify-between text-[11px] border-t border-[#769C5C]/60 text-[#D4E8C6]">
+            <div className="pt-3 mt-3.5 flex items-center justify-between text-[11px] border-t border-[#CDC498]/70 text-[#5A7347]">
               <button
                 type="button"
                 onClick={() => setShowAuditModal(true)}
-                className="flex items-center gap-1.5 transition hover:text-white"
+                className="flex items-center gap-1.5 transition hover:text-[#233917] font-medium"
               >
-                <History className="w-3.5 h-3.5" />
+                <History className="w-3.5 h-3.5 text-[#3A5726]" />
                 <span>Security Logs</span>
               </button>
-              <div className="flex items-center gap-1 text-[10px] text-[#E2EDD8]">
-                <Shield className="w-3 h-3 text-[#A3C886]" />
+              <div className="flex items-center gap-1 text-[10px] text-[#5A7347]">
+                <Shield className="w-3 h-3 text-[#3A5726]" />
                 <span>Supabase Protected</span>
               </div>
             </div>
