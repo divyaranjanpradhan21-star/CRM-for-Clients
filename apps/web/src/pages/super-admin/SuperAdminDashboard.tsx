@@ -7,6 +7,7 @@ import { OrganizationsPage } from './OrganizationsPage';
 import { SubscriptionsPage } from './SubscriptionsPage';
 import { UserManagementPage } from './UserManagementPage';
 import { GlobalSettingsPage } from './GlobalSettingsPage';
+import { AuditLogPage } from './AuditLogPage';
 import {
   LayoutDashboard,
   Building2,
@@ -37,6 +38,7 @@ import {
   CheckCircle2,
   HeartHandshake,
   Award,
+  Activity,
   Megaphone,
   X,
   MessageSquareWarning,
@@ -66,7 +68,7 @@ export const SuperAdminDashboard: React.FC = () => {
   const currentUser = getCurrentUser();
 
   // Navigation tab
-  const [activeTab, setActiveTab] = useState<'overview' | 'organizations' | 'subscriptions' | 'users' | 'settings' | 'customers' | 'reservations' | 'orders' | 'campaigns' | 'staff'>(
+  const [activeTab, setActiveTab] = useState<'overview' | 'organizations' | 'subscriptions' | 'users' | 'settings' | 'audit' | 'customers' | 'reservations' | 'orders' | 'campaigns' | 'staff'>(
     location.pathname.includes('organizations')
       ? 'organizations'
       : location.pathname.includes('subscriptions')
@@ -75,6 +77,8 @@ export const SuperAdminDashboard: React.FC = () => {
       ? 'users'
       : location.pathname.includes('settings')
       ? 'settings'
+      : location.pathname.includes('audit')
+      ? 'audit'
       : 'overview'
   );
 
@@ -375,6 +379,7 @@ export const SuperAdminDashboard: React.FC = () => {
                   { id: 'subscriptions', label: 'Subscriptions', icon: CreditCard },
                   { id: 'users', label: 'User Management', icon: Users },
                   { id: 'settings', label: 'Global Settings', icon: Settings },
+                  { id: 'audit', label: 'Audit & Activity', icon: Activity },
                   { id: 'customers', label: 'Patrons & CRM', icon: Users },
                   { id: 'reservations', label: 'Reservations', icon: Calendar },
                   { id: 'orders', label: 'Orders & POS', icon: Receipt },
@@ -429,6 +434,8 @@ export const SuperAdminDashboard: React.FC = () => {
               <UserManagementPage />
             ) : activeTab === 'settings' ? (
               <GlobalSettingsPage />
+            ) : activeTab === 'audit' ? (
+              <AuditLogPage />
             ) : (
               <div className="p-6 lg:p-8 space-y-6">
             {/* ── TOP SECTION: RHYTHMIC FEATURE CARDS (Matching "My Ongoing Cases" in Image 1) ── */}
