@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { SEOHead } from '../../components/SEOHead';
 import { clearCurrentSession, getCurrentUser } from '../../lib/auth';
@@ -26,6 +26,25 @@ import {
   Printer
 } from 'lucide-react';
 
+// Avatar colors for staff roster
+const AVATAR_COLORS = ['#79415A', '#82401D', '#1F313D', '#383854', '#BA4F57', '#3A5726', '#4F7037', '#2C441D'];
+
+interface TableRow {
+  id: string;
+  capacity: number;
+  status: string;
+  guest: string;
+  server: string;
+  time: string;
+}
+
+interface StaffRow {
+  name: string;
+  role: string;
+  hours: string;
+  color: string;
+}
+
 export const StaffDashboard: React.FC = () => {
   const navigate = useNavigate();
   const currentUser = getCurrentUser();
@@ -33,6 +52,68 @@ export const StaffDashboard: React.FC = () => {
   const [tableFilter, setTableFilter] = useState<'all' | 'OCCUPIED' | 'AVAILABLE' | 'BILL_REQUESTED'>('all');
   const [activeNavTab, setActiveNavTab] = useState<'floor' | 'tables' | 'queue' | 'actions'>('floor');
   const [searchQuery, setSearchQuery] = useState('');
+
+  // Live data from database
+  const [tables, setTables] = useState<TableRow[]>([]);
+  const [queue, setQueue] = useState<StaffRow[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchFloorData = async () => {
+      setIsLoading(true);
+      try {
+        // Fetch reservations as table data (live table/reservation status)
+        const { data: reservationsData } = await supabase
+          .from('reservations')
+          .select('*')
+          .order('created_at', { ascending: false })
+          .limit(50);
+
+        if (reservationsData && reservationsData.length > 0) {
+          const mappedTables: TableRow[] = reservationsData.map((r: any, idx: number) => ({
+            id: r.table_number || `T-${String(idx + 1).padStart(2, '0')}`,
+            capacity: r.guests_count || r.party_size || 2,
+            status: (r.status || 'AVAILABLE').toUpperCase().replace(' ', '_'),
+            guest: r.guest_name || r.customer_name || '—',
+            server: r.assigned_staff || r.server_name || '—',
+            time: r.reservation_time
+              ? new Date(r.reservation_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+              : r.duration || 'Ready',
+          }));
+          setTables(mappedTables);
+        } else {
+          setTables([]);
+        }
+
+        // Fetch staff / user profiles for the roster queue
+        const { data: staffData } = await supabase
+          .from('user_profiles')
+          .select('*')
+          .order('created_at', { ascending: false })
+          .limit(20);
+
+        if (staffData && staffData.length > 0) {
+          const mappedQueue: StaffRow[] = staffData.map((s: any, idx: number) => ({
+            name: s.full_name || s.name || `Staff ${idx + 1}`,
+            role: [s.role, s.department].filter(Boolean).join(' · ') || 'Floor Staff',
+            hours: s.shift_hours ? `${s.shift_hours} hrs · ${activeShiftFilter.charAt(0).toUpperCase() + activeShiftFilter.slice(1)} Shift` : `Floor · ${activeShiftFilter.charAt(0).toUpperCase() + activeShiftFilter.slice(1)} Shift`,
+            color: AVATAR_COLORS[idx % AVATAR_COLORS.length],
+          }));
+          setQueue(mappedQueue);
+        } else {
+          setQueue([]);
+        }
+      } catch (err) {
+        console.warn('Staff dashboard fetch notice:', err);
+        setTables([]);
+        setQueue([]);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchFloorData();
+  }, [activeShiftFilter]);
 
   const handleLogout = async () => {
     try {
@@ -44,22 +125,12 @@ export const StaffDashboard: React.FC = () => {
     navigate('/login');
   };
 
-  const tables = [
-    { id: 'T-01', capacity: 2, status: 'OCCUPIED', guest: 'Marcus Bell', server: 'Renata', time: '42 min' },
-    { id: 'T-02', capacity: 4, status: 'RESERVED', guest: 'Jonah Petersen', server: 'Tomas', time: '7:30 PM' },
-    { id: 'T-03', capacity: 6, status: 'AVAILABLE', guest: '—', server: '—', time: 'Ready' },
-    { id: 'T-04', capacity: 2, status: 'OCCUPIED', guest: 'Alma Duarte', server: 'Wes', time: '18 min' },
-    { id: 'T-05', capacity: 4, status: 'BILL_REQUESTED', guest: 'Elena Vidal', server: 'Renata', time: '1 hr 12m' },
-    { id: 'T-06', capacity: 8, status: 'AVAILABLE', guest: '—', server: '—', time: 'Ready' },
-  ];
-
-  const queue = [
-    { name: 'Renata Osei', role: 'FoodSafe · Cashier', hours: '12.5 hrs · Sat AM', color: '#79415A' },
-    { name: 'Marcus Bell', role: 'Driver · Lifting', hours: '8.0 hrs · Sat all day', color: '#82401D' },
-    { name: 'Jonah Petersen', role: 'Line Prep · Grill', hours: '4.5 hrs · Sat AM', color: '#1F313D' },
-    { name: 'Tomas Lindqvist', role: 'Floor Lead · Front', hours: '9.25 hrs · Sat AM', color: '#383854' },
-    { name: 'Alma Duarte', role: 'Hostess · Cashier', hours: '14.0 hrs · Sat AM', color: '#BA4F57' },
-  ];
+  // Derived live counters from database data
+  const availableCount = tables.filter(t => t.status === 'AVAILABLE').length;
+  const occupiedCount = tables.filter(t => t.status === 'OCCUPIED').length;
+  const billCount = tables.filter(t => t.status === 'BILL_REQUESTED').length;
+  const totalTableCount = tables.length;
+  const staffAvailableCount = queue.length;
 
   const filteredTables = tables.filter((t) => {
     if (tableFilter !== 'all' && t.status !== tableFilter) return false;
@@ -101,7 +172,7 @@ export const StaffDashboard: React.FC = () => {
             <div className="hidden md:flex items-center bg-[#E4DCCE] rounded-full p-1 border border-[#DDD5C7]">
               {[
                 { id: 'floor', label: 'Floor Board' },
-                { id: 'tables', label: 'Tables (6)' },
+                { id: 'tables', label: `Tables (${totalTableCount})` },
                 { id: 'queue', label: 'Staff Queue' },
                 { id: 'actions', label: 'Quick POS' },
               ].map((tab) => (
@@ -192,19 +263,27 @@ export const StaffDashboard: React.FC = () => {
                 <div className="space-y-2">
                   <div className="bg-[#EFE9DF] border border-[#DDD5C7] p-3 rounded-[16px] flex items-center justify-between">
                     <span className="text-xs font-bold text-[#1F313D]">Board Capacity</span>
-                    <span className="text-xs font-extrabold text-[#82401D]">5 OPEN</span>
+                    <span className="text-xs font-extrabold text-[#82401D]">
+                      {isLoading ? '—' : availableCount > 0 ? `${availableCount} OPEN` : 'No Tables'}
+                    </span>
                   </div>
                   <div className="bg-[#EFE9DF] border border-[#DDD5C7] p-3 rounded-[16px] flex items-center justify-between">
                     <span className="text-xs font-bold text-[#1F313D]">Staff Pool</span>
-                    <span className="text-xs font-semibold text-[#5C5549]">5 Available</span>
+                    <span className="text-xs font-semibold text-[#5C5549]">
+                      {isLoading ? '—' : staffAvailableCount > 0 ? `${staffAvailableCount} Available` : 'No Staff'}
+                    </span>
                   </div>
                   <div className="bg-[#EFE9DF] border border-[#DDD5C7] p-3 rounded-[16px] flex items-center justify-between">
                     <span className="text-xs font-bold text-[#1F313D]">Shift Conflicts</span>
-                    <span className="text-xs font-semibold text-[#BA4F57]">1 Open</span>
+                    <span className="text-xs font-semibold text-[#BA4F57]">
+                      {isLoading ? '—' : '0 Open'}
+                    </span>
                   </div>
                   <div className="bg-[#EFE9DF] border border-[#DDD5C7] p-3 rounded-[16px] flex items-center justify-between">
                     <span className="text-xs font-bold text-[#1F313D]">Confirmations</span>
-                    <span className="text-xs font-semibold text-[#79415A]">5 Awaiting</span>
+                    <span className="text-xs font-semibold text-[#79415A]">
+                      {isLoading ? '—' : occupiedCount > 0 ? `${occupiedCount} Awaiting` : '0 Awaiting'}
+                    </span>
                   </div>
                 </div>
               </div>
@@ -255,7 +334,7 @@ export const StaffDashboard: React.FC = () => {
                     Floor Distribution
                   </span>
                   <div className="text-3xl lg:text-4xl font-serif font-normal text-[#1F313D] tracking-tight mt-1 flex items-baseline gap-3">
-                    5 <span className="text-base font-sans font-bold text-[#82401D]">TABLES OPEN</span>
+                    {isLoading ? '—' : availableCount} <span className="text-base font-sans font-bold text-[#82401D]">TABLES OPEN</span>
                   </div>
                 </div>
 
@@ -280,7 +359,9 @@ export const StaffDashboard: React.FC = () => {
               {/* Status Indicator & Table Filters */}
               <div className="py-4 flex flex-wrap items-center justify-between gap-2 border-b border-[#E5DDD2]/70">
                 <div className="text-xs text-[#7A7268] flex items-center gap-2">
-                  <span className="font-semibold text-[#1F313D]">18 tables</span> · 12 filled · confirmed before 6:00 PM
+                  <span className="font-semibold text-[#1F313D]">{isLoading ? '—' : totalTableCount} tables</span>
+                  {!isLoading && totalTableCount > 0 && ` · ${occupiedCount + billCount} filled · confirmed before 6:00 PM`}
+                  {!isLoading && totalTableCount === 0 && ' · No table data in database yet'}
                 </div>
                 <div className="flex items-center gap-1.5 bg-[#EFE9DF] p-1 rounded-full border border-[#DDD5C7]">
                   {[
@@ -320,7 +401,15 @@ export const StaffDashboard: React.FC = () => {
 
               {/* Table Cards Grid (Aesthetic rhythmic alternation matching Image 1) */}
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-3.5 pt-3">
-                {filteredTables.map((t) => {
+                {isLoading ? (
+                  <div className="col-span-3 py-10 text-center text-sm text-[#7A7268]">Loading floor data...</div>
+                ) : filteredTables.length === 0 ? (
+                  <div className="col-span-3 py-10 text-center">
+                    <div className="text-[#7A7268] text-sm font-medium mb-1">No tables in database yet</div>
+                    <div className="text-[#7A7268] text-xs">Table & reservation data will appear here once added to the database.</div>
+                  </div>
+                ) : (
+                  filteredTables.map((t) => {
                   const isOccupied = t.status === 'OCCUPIED';
                   const isBill = t.status === 'BILL_REQUESTED';
                   const isReserved = t.status === 'RESERVED';
@@ -372,7 +461,8 @@ export const StaffDashboard: React.FC = () => {
                       </div>
                     </div>
                   );
-                })}
+                })
+                )}
               </div>
             </div>
 
@@ -393,37 +483,46 @@ export const StaffDashboard: React.FC = () => {
               <div className="flex items-center justify-between mb-4">
                 <div>
                   <span className="text-xs font-bold text-[#1F313D] block font-serif">Floor Roster Queue</span>
-                  <span className="text-[10px] text-[#7A7268]">Saturday Shift AM</span>
+                  <span className="text-[10px] text-[#7A7268]">{activeShiftFilter.charAt(0).toUpperCase() + activeShiftFilter.slice(1)} Shift</span>
                 </div>
                 <span className="text-[10px] bg-[#1F313D] text-white px-2.5 py-0.5 rounded-full font-bold">
-                  5 AVAILABLE
+                  {isLoading ? '—' : staffAvailableCount > 0 ? `${staffAvailableCount} AVAILABLE` : 'NO STAFF'}
                 </span>
               </div>
 
               <div className="space-y-3">
-                {queue.map((person, idx) => (
-                  <div
-                    key={idx}
-                    className="bg-[#EFE9DF] border border-[#DDD5C7] p-3 rounded-[18px] flex items-center gap-3 transition-colors hover:border-[#82401D]/40"
-                  >
+                {isLoading ? (
+                  <div className="py-6 text-center text-xs text-[#7A7268]">Loading staff roster...</div>
+                ) : queue.length === 0 ? (
+                  <div className="py-6 text-center">
+                    <div className="text-[#7A7268] text-xs font-medium">No staff in database yet</div>
+                    <div className="text-[#7A7268] text-[10px] mt-1">Staff roster will appear here once added.</div>
+                  </div>
+                ) : (
+                  queue.map((person, idx) => (
                     <div
-                      className="w-10 h-10 rounded-full text-white font-serif font-black text-xs flex items-center justify-center shrink-0 shadow-2xs"
-                      style={{ backgroundColor: person.color }}
+                      key={idx}
+                      className="bg-[#EFE9DF] border border-[#DDD5C7] p-3 rounded-[18px] flex items-center gap-3 transition-colors hover:border-[#82401D]/40"
                     >
-                      {person.name
-                        .split(' ')
-                        .map((n) => n[0])
-                        .join('')}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="text-xs font-bold text-[#1F313D] truncate">{person.name}</div>
-                      <div className="text-[10px] text-[#7A7268] truncate">{person.role}</div>
-                      <div className="text-[9px] text-[#82401D] font-mono mt-0.5 font-semibold">
-                        {person.hours}
+                      <div
+                        className="w-10 h-10 rounded-full text-white font-serif font-black text-xs flex items-center justify-center shrink-0 shadow-2xs"
+                        style={{ backgroundColor: person.color }}
+                      >
+                        {person.name
+                          .split(' ')
+                          .map((n) => n[0])
+                          .join('')}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="text-xs font-bold text-[#1F313D] truncate">{person.name}</div>
+                        <div className="text-[10px] text-[#7A7268] truncate">{person.role}</div>
+                        <div className="text-[9px] text-[#82401D] font-mono mt-0.5 font-semibold">
+                          {person.hours}
+                        </div>
                       </div>
                     </div>
-                  </div>
-                ))}
+                  ))
+                )}
               </div>
             </div>
 
