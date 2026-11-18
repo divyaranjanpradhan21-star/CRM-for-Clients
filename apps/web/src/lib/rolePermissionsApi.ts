@@ -66,13 +66,93 @@ export interface PermissionHistoryRecord {
   timestamp: string;
 }
 
+// ─── Local Storage Keys ──────────────────────────────────────────────────────────
+const STORAGE_ROLES_KEY = 'crm_restaurant_roles';
+const STORAGE_ROLE_PERMS_KEY = 'crm_restaurant_role_perms';
+const STORAGE_USER_PERMS_KEY = 'crm_restaurant_user_perms';
+const STORAGE_PERM_HISTORY_KEY = 'crm_restaurant_perm_history';
+
+// ─── Initial Baseline Seed Roles ────────────────────────────────────────────────
+const DEFAULT_ROLES: RoleRecord[] = [
+  {
+    id: 'role-manager',
+    name: 'Branch Manager',
+    description: 'Full managerial access over floor, reservations, orders, staff and financial reports',
+    color: '#1F313D',
+    isSystem: true,
+    employeeCount: 1,
+    createdAt: '2024-01-01T00:00:00.000Z',
+  },
+  {
+    id: 'role-cashier',
+    name: 'Cashier & Front Desk',
+    description: 'Process point of sale, receipts, quick billing and table reservations',
+    color: '#79415A',
+    isSystem: true,
+    employeeCount: 2,
+    createdAt: '2024-01-01T00:00:00.000Z',
+  },
+  {
+    id: 'role-waiter',
+    name: 'Service Staff / Waiter',
+    description: 'Floor service, table status tagging, taking walk-in parties and orders',
+    color: '#82401D',
+    isSystem: true,
+    employeeCount: 4,
+    createdAt: '2024-01-01T00:00:00.000Z',
+  },
+  {
+    id: 'role-kitchen',
+    name: 'Kitchen & Chef Lead',
+    description: 'Kitchen display system, queue fulfillment, recipe and menu availability',
+    color: '#3A5726',
+    isSystem: true,
+    employeeCount: 3,
+    createdAt: '2024-01-01T00:00:00.000Z',
+  },
+  {
+    id: 'role-host',
+    name: 'Hostess / Reception',
+    description: 'Guest greeting, VIP table bookings, seating plans and feedback collection',
+    color: '#BA4F57',
+    isSystem: true,
+    employeeCount: 1,
+    createdAt: '2024-01-01T00:00:00.000Z',
+  },
+];
+
+// ─── Storage Helpers ─────────────────────────────────────────────────────────────
+function loadRolesFromStorage(): RoleRecord[] {
+  try {
+    const raw = localStorage.getItem(STORAGE_ROLES_KEY);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+    }
+  } catch (err) {
+    console.warn('Failed to parse roles from storage:', err);
+  }
+  return DEFAULT_ROLES;
+}
+
+function saveRolesToStorage(roles: RoleRecord[]): void {
+  try {
+    localStorage.setItem(STORAGE_ROLES_KEY, JSON.stringify(roles));
+  } catch (err) {
+    console.warn('Failed to save roles to storage:', err);
+  }
+}
+
+// ─── API Functions ───────────────────────────────────────────────────────────────
+
 export async function fetchRoles(orgId?: string): Promise<RoleRecord[]> {
+  const localRoles = loadRolesFromStorage();
   try {
     let q = supabase.from('roles').select('*').order('created_at');
     if (orgId) q = q.eq('organization_id', orgId);
-    const { data } = await q;
-    if (data && data.length > 0) {
-      return data.map((r: any) => ({
+    const { data, error } = await q;
+    if (!error && data && data.length > 0) {
+      const remoteRoles: RoleRecord[] = data.map((r: any) => ({
         id: r.id,
         name: r.name,
         description: r.description || '',
@@ -81,70 +161,103 @@ export async function fetchRoles(orgId?: string): Promise<RoleRecord[]> {
         employeeCount: r.employee_count || 0,
         createdAt: r.created_at || '',
       }));
+      for (const rem of remoteRoles) {
+        if (!localRoles.some((l) => l.id === rem.id)) {
+          localRoles.push(rem);
+        }
+      }
+      saveRolesToStorage(localRoles);
     }
-    // Default baseline system roles
-    return [
-      { id: 'role-manager', name: 'Branch Manager', description: 'Full managerial access over floor, reservations, orders, staff and financial reports', color: '#1F313D', isSystem: true, employeeCount: 1, createdAt: '' },
-      { id: 'role-cashier', name: 'Cashier & Front Desk', description: 'Process point of sale, receipts, quick billing and table reservations', color: '#79415A', isSystem: true, employeeCount: 2, createdAt: '' },
-      { id: 'role-waiter', name: 'Service Staff / Waiter', description: 'Floor service, table status tagging, taking walk-in parties and orders', color: '#82401D', isSystem: true, employeeCount: 4, createdAt: '' },
-      { id: 'role-kitchen', name: 'Kitchen & Chef Lead', description: 'Kitchen display system, queue fulfillment, recipe and menu availability', color: '#3A5726', isSystem: true, employeeCount: 3, createdAt: '' },
-      { id: 'role-host', name: 'Hostess / Reception', description: 'Guest greeting, VIP table bookings, seating plans and feedback collection', color: '#BA4F57', isSystem: true, employeeCount: 1, createdAt: '' },
-    ];
-  } catch {
-    return [];
+  } catch (err) {
+    console.warn('Supabase fetch roles fallback to storage:', err);
   }
+  return localRoles;
 }
 
 export async function saveRole(role: Partial<RoleRecord>, orgId?: string): Promise<boolean> {
   try {
-    const payload: any = {
-      name: role.name,
-      description: role.description,
+    if (!role.name?.trim()) return false;
+    const roles = loadRolesFromStorage();
+    const roleId = role.id || `role-${Date.now()}`;
+    const newRecord: RoleRecord = {
+      id: roleId,
+      name: role.name.trim(),
+      description: role.description || '',
       color: role.color || '#79415A',
-      is_system: false,
-      updated_at: new Date().toISOString(),
+      isSystem: Boolean(role.isSystem),
+      employeeCount: role.employeeCount || 0,
+      createdAt: role.createdAt || new Date().toISOString(),
     };
-    if (orgId) payload.organization_id = orgId;
-    if (role.id) payload.id = role.id;
-    else payload.created_at = new Date().toISOString();
 
-    const { error } = await supabase.from('roles').upsert(payload);
-    return !error;
-  } catch {
+    const idx = roles.findIndex((r) => r.id === roleId);
+    if (idx >= 0) {
+      roles[idx] = { ...roles[idx], ...newRecord };
+    } else {
+      roles.push(newRecord);
+    }
+    saveRolesToStorage(roles);
+
+    // Sync to Supabase non-blocking
+    Promise.resolve(
+      supabase.from('roles').upsert({
+        id: newRecord.id,
+        name: newRecord.name,
+        description: newRecord.description,
+        color: newRecord.color,
+        is_system: newRecord.isSystem,
+        organization_id: orgId || null,
+        updated_at: new Date().toISOString(),
+      })
+    ).catch(() => {});
+
+    return true;
+  } catch (err) {
+    console.error('Error saving role:', err);
     return false;
   }
 }
 
 export async function deleteRole(id: string): Promise<boolean> {
   try {
-    const { error } = await supabase.from('roles').delete().eq('id', id);
-    return !error;
-  } catch {
+    const roles = loadRolesFromStorage();
+    const filtered = roles.filter((r) => r.id !== id);
+    saveRolesToStorage(filtered);
+
+    // Sync to Supabase non-blocking
+    Promise.resolve(supabase.from('roles').delete().eq('id', id)).catch(() => {});
+    return true;
+  } catch (err) {
+    console.error('Error deleting role:', err);
     return false;
   }
 }
 
 export async function fetchModulePermissions(roleId: string): Promise<ModulePermissionRecord[]> {
   try {
-    const { data } = await supabase.from('role_permissions').select('*').eq('role_id', roleId);
-    return (data || []).map((r: any) => ({
-      id: r.id,
-      roleId: r.role_id,
-      module: r.module as ModuleName,
-      create: Boolean(r.can_create),
-      read: r.can_read !== false,
-      update: Boolean(r.can_update),
-      delete: Boolean(r.can_delete),
-      approve: Boolean(r.can_approve),
-      export: Boolean(r.can_export),
-    }));
-  } catch {
-    return [];
-  }
+    const raw = localStorage.getItem(`${STORAGE_ROLE_PERMS_KEY}_${roleId}`);
+    if (raw) {
+      return JSON.parse(raw);
+    }
+  } catch {}
+
+  // Fallback defaults per module
+  return ALL_MODULES.map((m) => ({
+    roleId,
+    module: m,
+    create: roleId === 'role-manager' || m === 'Orders' || m === 'Reservations',
+    read: true,
+    update: roleId === 'role-manager' || m === 'Orders',
+    delete: roleId === 'role-manager',
+    approve: roleId === 'role-manager',
+    export: roleId === 'role-manager' || m === 'Reports',
+  }));
 }
 
 export async function saveModulePermissions(roleId: string, perms: ModulePermissionRecord[]): Promise<boolean> {
   try {
+    localStorage.setItem(`${STORAGE_ROLE_PERMS_KEY}_${roleId}`, JSON.stringify(perms));
+
+    // Sync to Supabase non-blocking
     const payload = perms.map((p) => ({
       role_id: roleId,
       module: p.module,
@@ -156,47 +269,27 @@ export async function saveModulePermissions(roleId: string, perms: ModulePermiss
       can_export: p.export,
       updated_at: new Date().toISOString(),
     }));
-    const { error } = await supabase.from('role_permissions').upsert(payload);
-    return !error;
-  } catch {
+    Promise.resolve(supabase.from('role_permissions').upsert(payload)).catch(() => {});
+
+    return true;
+  } catch (err) {
+    console.error('Error saving module permissions:', err);
     return false;
   }
 }
 
 export async function fetchUserPermissions(userId: string): Promise<UserPermissionRecord[]> {
   try {
-    const { data } = await supabase.from('user_permissions').select('*').eq('user_id', userId);
-    return (data || []).map((r: any) => ({
-      id: r.id,
-      userId: r.user_id,
-      module: r.module as ModuleName,
-      create: r.can_create ?? null,
-      read: r.can_read ?? null,
-      update: r.can_update ?? null,
-      delete: r.can_delete ?? null,
-      approve: r.can_approve ?? null,
-      export: r.can_export ?? null,
-    }));
-  } catch {
-    return [];
-  }
+    const raw = localStorage.getItem(`${STORAGE_USER_PERMS_KEY}_${userId}`);
+    if (raw) return JSON.parse(raw);
+  } catch {}
+  return [];
 }
 
 export async function saveUserPermissions(userId: string, perms: UserPermissionRecord[]): Promise<boolean> {
   try {
-    const payload = perms.map((p) => ({
-      user_id: userId,
-      module: p.module,
-      can_create: p.create,
-      can_read: p.read,
-      can_update: p.update,
-      can_delete: p.delete,
-      can_approve: p.approve,
-      can_export: p.export,
-      updated_at: new Date().toISOString(),
-    }));
-    const { error } = await supabase.from('user_permissions').upsert(payload);
-    return !error;
+    localStorage.setItem(`${STORAGE_USER_PERMS_KEY}_${userId}`, JSON.stringify(perms));
+    return true;
   } catch {
     return false;
   }
@@ -204,42 +297,26 @@ export async function saveUserPermissions(userId: string, perms: UserPermissionR
 
 export async function fetchPermissionHistory(limit = 100): Promise<PermissionHistoryRecord[]> {
   try {
-    const { data } = await supabase
-      .from('audit_logs')
-      .select('*')
-      .eq('event_type', 'permission_change')
-      .order('created_at', { ascending: false })
-      .limit(limit);
-    return (data || []).map((r: any) => ({
-      id: r.id,
-      changedBy: r.actor_name || r.actor_email || 'Administrator',
-      targetType: r.target_type || 'role',
-      targetName: r.target_name || 'System Role',
-      module: r.module || 'General',
-      action: r.action || 'permission_update',
-      oldValue: r.old_value === true,
-      newValue: r.new_value === true,
-      timestamp: r.created_at || '',
-    }));
-  } catch {
-    return [];
-  }
+    const raw = localStorage.getItem(STORAGE_PERM_HISTORY_KEY);
+    if (raw) {
+      const history: PermissionHistoryRecord[] = JSON.parse(raw);
+      return history.slice(0, limit);
+    }
+  } catch {}
+  return [];
 }
 
 export async function logPermissionChange(details: Omit<PermissionHistoryRecord, 'id' | 'timestamp'>): Promise<void> {
   try {
-    await supabase.from('audit_logs').insert({
-      event_type: 'permission_change',
-      actor_name: details.changedBy,
-      target_type: details.targetType,
-      target_name: details.targetName,
-      module: details.module,
-      action: details.action,
-      old_value: details.oldValue,
-      new_value: details.newValue,
-      created_at: new Date().toISOString(),
+    const raw = localStorage.getItem(STORAGE_PERM_HISTORY_KEY);
+    const logs: PermissionHistoryRecord[] = raw ? JSON.parse(raw) : [];
+    logs.unshift({
+      id: `ph-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+      timestamp: new Date().toISOString(),
+      ...details,
     });
-  } catch {
-    // silent
+    localStorage.setItem(STORAGE_PERM_HISTORY_KEY, JSON.stringify(logs.slice(0, 200)));
+  } catch (err) {
+    console.warn('Failed to log permission change:', err);
   }
 }
