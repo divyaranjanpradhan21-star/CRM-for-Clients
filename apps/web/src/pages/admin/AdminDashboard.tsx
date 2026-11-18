@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { SEOHead } from '../../components/SEOHead';
 import { clearCurrentSession, getCurrentUser } from '../../lib/auth';
 import { supabase } from '../../lib/supabase';
+import { BranchManagementView } from './BranchManagementView';
 import {
   LayoutDashboard,
   Receipt,
@@ -91,14 +92,15 @@ interface DrillDownModalState {
 
 export const AdminDashboard: React.FC = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const currentUser = getCurrentUser();
   const orgId = currentUser?.organizationId;
   const orgName = currentUser?.organizationName || "Cafe's Corner";
 
   // Navigation tab
   const [activeTab, setActiveTab] = useState<
-    'overview' | 'orders' | 'reservations' | 'customers' | 'menu' | 'staff' | 'campaigns' | 'feedback'
-  >('overview');
+    'overview' | 'branches' | 'orders' | 'reservations' | 'customers' | 'menu' | 'staff' | 'campaigns' | 'feedback'
+  >(location.pathname.includes('branches') ? 'branches' : 'overview');
 
   // Filters State
   const [filters, setFilters] = useState<DashboardFilterState>({
@@ -427,6 +429,7 @@ export const AdminDashboard: React.FC = () => {
               <nav className="space-y-1.5">
                 {[
                   { id: 'overview', label: 'Executive Overview', icon: LayoutDashboard },
+                  { id: 'branches', label: 'Branch Management', icon: Building, badge: '4 outlets' },
                   { id: 'customers', label: 'Patrons & Retention', icon: Users, badge: m.totalCustomers.toLocaleString() },
                   { id: 'reservations', label: 'Table Reservations', icon: Calendar, badge: m.pendingReservations > 0 ? `${m.pendingReservations} new` : undefined },
                   { id: 'orders', label: 'Orders & Live POS', icon: Receipt, badge: `${m.ordersReceived + m.ordersPreparing} live` },
@@ -497,6 +500,17 @@ export const AdminDashboard: React.FC = () => {
 
           {/* Main Dashboard Canvas */}
           <main className="flex-1 p-5 sm:p-6 lg:p-8 space-y-6 overflow-y-auto">
+            {activeTab === 'branches' ? (
+              <BranchManagementView
+                currentUserRole={currentUser?.role}
+                currentUserBranch={currentUser?.branchName}
+                onSelectBranchForDashboard={(b) => {
+                  setFilters({ ...filters, branch: b });
+                  setActiveTab('overview');
+                }}
+              />
+            ) : (
+              <>
             {/* ── SECTION 1: TOP 4 HERO KPI CARDS WITH DIRECT NAVIGATION ── */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
               {/* CARD 1: TOTAL SALES REVENUE (Dark Contrast Hero Card) */}
@@ -1142,6 +1156,8 @@ export const AdminDashboard: React.FC = () => {
                 </div>
               </div>
             </div>
+              </>
+            )}
           </main>
         </div>
       </div>

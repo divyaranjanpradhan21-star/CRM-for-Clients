@@ -94,6 +94,8 @@ export const UnifiedLoginPage: React.FC = () => {
   // MFA challenge state
   const [mfaCode, setMfaCode] = useState('');
   const [pendingMfaUser, setPendingMfaUser] = useState<AuthUser | null>(null);
+  const [authorizedMfaToken, setAuthorizedMfaToken] = useState<string>('123456');
+  const [failedMfaAttempts, setFailedMfaAttempts] = useState<number>(0);
 
   // UI status
   const [isLoading, setIsLoading] = useState(false);
@@ -243,12 +245,25 @@ export const UnifiedLoginPage: React.FC = () => {
     e.preventDefault();
     if (!pendingMfaUser) return;
 
-    // In demo mode or Supabase TOTP, accept 123456 or 6-digit number
-    if (mfaCode.trim() === '123456' || mfaCode.trim().length === 6) {
-      completeUserLogin(pendingMfaUser);
-    } else {
-      setError('Invalid 6-digit MFA security code. Try: 123456');
+    setError(null);
+    const entered = mfaCode.trim();
+
+    // STRICT 2FA AUTHENTICATION: Must match the authorized 6-digit MFA token exactly
+    if (entered !== authorizedMfaToken) {
+      const attempts = failedMfaAttempts + 1;
+      setFailedMfaAttempts(attempts);
+
+      if (attempts >= 3) {
+        setError(`Security Warning: 3 failed 2FA verification attempts detected. Please enter the authentic authorized code (${authorizedMfaToken}).`);
+      } else {
+        setError(`Invalid Two-Factor Authentication token. Please enter the authentic 6-digit code (Demo code: ${authorizedMfaToken}).`);
+      }
+      return;
     }
+
+    // Authentic code confirmed
+    setFailedMfaAttempts(0);
+    completeUserLogin(pendingMfaUser);
   };
 
   // 1. Password Reset Request: Generate & Send Verification Code
@@ -932,7 +947,7 @@ export const UnifiedLoginPage: React.FC = () => {
                   </div>
                   <h2 className="text-sm font-black tracking-wider uppercase text-[#3A5726]">Two-Factor Authentication</h2>
                   <p className="text-[11px] mt-1 text-[#5A7347]">
-                    Super Admin role requires 2FA token confirmation. (Demo code: <strong>123456</strong>)
+                    Super Admin role requires 2FA token confirmation. (Demo code: <strong>{authorizedMfaToken}</strong>)
                   </p>
                 </div>
 
@@ -943,8 +958,8 @@ export const UnifiedLoginPage: React.FC = () => {
                       type="text"
                       maxLength={6}
                       value={mfaCode}
-                      onChange={(e) => setMfaCode(e.target.value)}
-                      placeholder="123456"
+                      onChange={(e) => setMfaCode(e.target.value.replace(/\D/g, ''))}
+                      placeholder={authorizedMfaToken}
                       required
                       autoFocus
                       className="w-full px-4 py-2.5 rounded-xl text-[#1E3512] text-center font-mono text-lg tracking-widest placeholder-[#7F9370] focus:outline-none transition bg-[#FAF7EC] border border-[#CDC498] focus:border-[#3A5726] focus:bg-white shadow-xs font-bold"
@@ -958,13 +973,26 @@ export const UnifiedLoginPage: React.FC = () => {
                     Verify &amp; Enter Platform
                   </button>
 
-                  <div className="text-center pt-1">
+                  <div className="flex items-center justify-between text-xs pt-1 px-1">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const freshCode = String(Math.floor(100000 + Math.random() * 900000));
+                        setAuthorizedMfaToken(freshCode);
+                        setMfaCode('');
+                        setSuccessMsg(`New 2FA security token dispatched to authenticator: ${freshCode}`);
+                        setError(null);
+                      }}
+                      className="text-[11px] text-[#3A5726] hover:underline font-bold"
+                    >
+                      Resend New Token
+                    </button>
                     <button
                       type="button"
                       onClick={() => setStep('LOGIN')}
-                      className="text-xs flex items-center gap-1.5 mx-auto transition text-[#3A5726] hover:underline font-semibold"
+                      className="text-[11px] flex items-center gap-1 transition text-[#5A7347] hover:underline"
                     >
-                      <ArrowLeft className="w-3.5 h-3.5" /> Cancel MFA
+                      <ArrowLeft className="w-3 h-3" /> Cancel MFA
                     </button>
                   </div>
                 </form>
