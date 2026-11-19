@@ -6,6 +6,7 @@ import { supabase } from '../../lib/supabase';
 import { BranchManagementView } from './BranchManagementView';
 import { EmployeeManagementView } from './EmployeeManagementView';
 import { RolePermissionsView } from './RolePermissionsView';
+import { RestaurantSettingsView } from './RestaurantSettingsView';
 import {
   LayoutDashboard,
   Receipt,
@@ -102,7 +103,7 @@ export const AdminDashboard: React.FC = () => {
 
   // Navigation tab
   const [activeTab, setActiveTab] = useState<
-    'overview' | 'branches' | 'employees' | 'roles' | 'orders' | 'reservations' | 'customers' | 'menu' | 'staff' | 'campaigns' | 'feedback'
+    'overview' | 'branches' | 'employees' | 'roles' | 'settings' | 'orders' | 'reservations' | 'customers' | 'menu' | 'staff' | 'campaigns' | 'feedback'
   >(
     location.pathname.includes('branches')
       ? 'branches'
@@ -110,6 +111,8 @@ export const AdminDashboard: React.FC = () => {
       ? 'employees'
       : location.pathname.includes('roles')
       ? 'roles'
+      : location.pathname.includes('settings')
+      ? 'settings'
       : 'overview'
   );
 
@@ -336,6 +339,22 @@ export const AdminDashboard: React.FC = () => {
               )}
             </button>
 
+            {/* Restaurant Settings Quick Button */}
+            <button
+              onClick={() => {
+                setActiveTab('settings');
+                navigate('/admin/settings');
+              }}
+              className={`relative w-9 h-9 rounded-full border flex items-center justify-center transition shadow-2xs ${
+                activeTab === 'settings'
+                  ? 'bg-[#79415A] text-white border-[#79415A]'
+                  : 'bg-[#FAF7F2] border-[#DDD5C7] text-[#5C5549] hover:text-[#1F313D]'
+              }`}
+              title="Restaurant Settings & Configuration"
+            >
+              <Settings className="w-4 h-4" />
+            </button>
+
             {/* User Profile Pill */}
             <div className="flex items-center gap-2.5 bg-[#FAF7F2] border border-[#DDD5C7] rounded-full pl-1.5 pr-3.5 py-1 shadow-2xs">
               <img
@@ -443,6 +462,7 @@ export const AdminDashboard: React.FC = () => {
                   { id: 'branches', label: 'Branch Management', icon: Building, badge: '4 outlets' },
                   { id: 'employees', label: 'Employee Management', icon: UserCheck },
                   { id: 'roles', label: 'Roles & Permissions', icon: ShieldCheck },
+                  { id: 'settings', label: 'Restaurant Settings', icon: Settings },
                   { id: 'customers', label: 'Patrons & Retention', icon: Users, badge: m.totalCustomers.toLocaleString() },
                   { id: 'reservations', label: 'Table Reservations', icon: Calendar, badge: m.pendingReservations > 0 ? `${m.pendingReservations} new` : undefined },
                   { id: 'orders', label: 'Orders & Live POS', icon: Receipt, badge: `${m.ordersReceived + m.ordersPreparing} live` },
@@ -529,6 +549,10 @@ export const AdminDashboard: React.FC = () => {
               />
             ) : activeTab === 'roles' ? (
               <RolePermissionsView
+                orgId={orgId}
+              />
+            ) : activeTab === 'settings' ? (
+              <RestaurantSettingsView
                 orgId={orgId}
               />
             ) : (
