@@ -7,6 +7,7 @@ import { BranchManagementView } from './BranchManagementView';
 import { EmployeeManagementView } from './EmployeeManagementView';
 import { RolePermissionsView } from './RolePermissionsView';
 import { RestaurantSettingsView } from './RestaurantSettingsView';
+import { CustomerManagementView } from './CustomerManagementView';
 import {
   LayoutDashboard,
   Receipt,
@@ -103,7 +104,7 @@ export const AdminDashboard: React.FC = () => {
 
   // Navigation tab
   const [activeTab, setActiveTab] = useState<
-    'overview' | 'branches' | 'employees' | 'roles' | 'settings' | 'orders' | 'reservations' | 'customers' | 'menu' | 'staff' | 'campaigns' | 'feedback'
+    'overview' | 'branches' | 'employees' | 'roles' | 'settings' | 'customers' | 'orders' | 'reservations' | 'menu' | 'staff' | 'campaigns' | 'feedback'
   >(
     location.pathname.includes('branches')
       ? 'branches'
@@ -113,6 +114,8 @@ export const AdminDashboard: React.FC = () => {
       ? 'roles'
       : location.pathname.includes('settings')
       ? 'settings'
+      : location.pathname.includes('customers')
+      ? 'customers'
       : 'overview'
   );
 
@@ -478,7 +481,6 @@ export const AdminDashboard: React.FC = () => {
                       key={item.id}
                       onClick={() => {
                         setActiveTab(item.id as any);
-                        if (item.id === 'customers') openDrillDown('customers', 'Customer Profiles & Segments', 'All registered patrons');
                         if (item.id === 'reservations') openDrillDown('reservations', 'Reservations Ledger', 'All bookings by status');
                         if (item.id === 'orders') openDrillDown('orders', 'Order Transactions & Tickets', 'Realtime POS receipts');
                         if (item.id === 'menu') openDrillDown('menu_items', 'Menu Items Performance', 'Sales and profitability');
@@ -553,6 +555,10 @@ export const AdminDashboard: React.FC = () => {
               />
             ) : activeTab === 'settings' ? (
               <RestaurantSettingsView
+                orgId={orgId}
+              />
+            ) : activeTab === 'customers' ? (
+              <CustomerManagementView
                 orgId={orgId}
               />
             ) : (
