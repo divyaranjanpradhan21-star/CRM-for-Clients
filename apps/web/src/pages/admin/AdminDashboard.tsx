@@ -8,6 +8,8 @@ import { EmployeeManagementView } from './EmployeeManagementView';
 import { RolePermissionsView } from './RolePermissionsView';
 import { RestaurantSettingsView } from './RestaurantSettingsView';
 import { CustomerManagementView } from './CustomerManagementView';
+import { CustomerSegmentationView } from './CustomerSegmentationView';
+import { LeadManagementView } from './LeadManagementView';
 import {
   LayoutDashboard,
   Receipt,
@@ -104,7 +106,7 @@ export const AdminDashboard: React.FC = () => {
 
   // Navigation tab
   const [activeTab, setActiveTab] = useState<
-    'overview' | 'branches' | 'employees' | 'roles' | 'settings' | 'customers' | 'orders' | 'reservations' | 'menu' | 'staff' | 'campaigns' | 'feedback'
+    'overview' | 'branches' | 'employees' | 'roles' | 'settings' | 'customers' | 'segments' | 'leads' | 'orders' | 'reservations' | 'menu' | 'staff' | 'campaigns' | 'feedback'
   >(
     location.pathname.includes('branches')
       ? 'branches'
@@ -114,6 +116,10 @@ export const AdminDashboard: React.FC = () => {
       ? 'roles'
       : location.pathname.includes('settings')
       ? 'settings'
+      : location.pathname.includes('segments')
+      ? 'segments'
+      : location.pathname.includes('leads')
+      ? 'leads'
       : location.pathname.includes('customers')
       ? 'customers'
       : 'overview'
@@ -467,6 +473,8 @@ export const AdminDashboard: React.FC = () => {
                   { id: 'roles', label: 'Roles & Permissions', icon: ShieldCheck },
                   { id: 'settings', label: 'Restaurant Settings', icon: Settings },
                   { id: 'customers', label: 'Patrons & Retention', icon: Users, badge: m.totalCustomers.toLocaleString() },
+                  { id: 'segments', label: 'Customer Segments', icon: SlidersHorizontal, badge: '8 cohorts' },
+                  { id: 'leads', label: 'Inbound Leads & Sales', icon: UserPlus, badge: '7 active' },
                   { id: 'reservations', label: 'Table Reservations', icon: Calendar, badge: m.pendingReservations > 0 ? `${m.pendingReservations} new` : undefined },
                   { id: 'orders', label: 'Orders & Live POS', icon: Receipt, badge: `${m.ordersReceived + m.ordersPreparing} live` },
                   { id: 'menu', label: 'Menu Performance', icon: UtensilsCrossed },
@@ -559,6 +567,14 @@ export const AdminDashboard: React.FC = () => {
               />
             ) : activeTab === 'customers' ? (
               <CustomerManagementView
+                orgId={orgId}
+              />
+            ) : activeTab === 'segments' ? (
+              <CustomerSegmentationView
+                orgId={orgId}
+              />
+            ) : activeTab === 'leads' ? (
+              <LeadManagementView
                 orgId={orgId}
               />
             ) : (

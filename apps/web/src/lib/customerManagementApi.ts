@@ -77,6 +77,7 @@ export interface CustomerProfile {
   // Culinary & Hospitality
   dietaryPreferences: string[];
   foodAllergies: string[];
+  favoriteFoodCategory?: string;
   specialInstructions?: string;
 
   // Lifecycle & Metrics
@@ -148,6 +149,7 @@ const INITIAL_CUSTOMERS: CustomerProfile[] = [
     anniversary: '2012-11-20',
     dietaryPreferences: ['Pescatarian', 'Organic Only'],
     foodAllergies: ['Shellfish', 'Lactose Intolerant'],
+    favoriteFoodCategory: 'Continental & Grills',
     specialInstructions: 'Prefers quiet corner booth. Prefers sparkling water without ice. Celebrates wedding anniversary on Nov 20.',
     category: 'VIP',
     loyaltyTier: 'Platinum',
@@ -273,6 +275,7 @@ const INITIAL_CUSTOMERS: CustomerProfile[] = [
     anniversary: '2019-12-08',
     dietaryPreferences: ['Vegan', 'Plant-Based'],
     foodAllergies: ['Gluten / Celiac', 'Peanuts'],
+    favoriteFoodCategory: 'Artisanal Bakery & Cafe',
     specialInstructions: 'Strict celiac. Please ensure dedicated fryer & pan for all food preparation.',
     category: 'VIP',
     loyaltyTier: 'Gold',
@@ -349,6 +352,7 @@ const INITIAL_CUSTOMERS: CustomerProfile[] = [
     anniversary: '2005-02-18',
     dietaryPreferences: ['Vegetarian', 'Jain Option Required'],
     foodAllergies: ['No Onion / No Garlic', 'Mushroom'],
+    favoriteFoodCategory: 'Authentic Indian & Jain Special',
     specialInstructions: 'Jain preparation only. Table should be sanitized thoroughly prior to seating.',
     category: 'REGULAR',
     loyaltyTier: 'Silver',
@@ -423,6 +427,7 @@ const INITIAL_CUSTOMERS: CustomerProfile[] = [
     dateOfBirth: '1995-09-18',
     dietaryPreferences: ['Keto / Low-Carb', 'Halal'],
     foodAllergies: ['Tree Nuts'],
+    favoriteFoodCategory: 'European & Keto Salads',
     specialInstructions: 'Extra virgin olive oil dressing on side. Double espresso with splash of heavy cream.',
     category: 'NEW',
     loyaltyTier: 'Bronze',
@@ -479,6 +484,7 @@ const INITIAL_CUSTOMERS: CustomerProfile[] = [
     anniversary: '1998-05-12',
     dietaryPreferences: ['Non-Vegetarian', 'Continental'],
     foodAllergies: [],
+    favoriteFoodCategory: 'Fine Wine & Continental Steaks',
     specialInstructions: 'VIP table hosting. Sommelier wine pairing consultation requested for dinner bookings.',
     category: 'VIP',
     loyaltyTier: 'Platinum',
@@ -522,6 +528,7 @@ const INITIAL_CUSTOMERS: CustomerProfile[] = [
     dateOfBirth: '2001-08-19',
     dietaryPreferences: ['Vegetarian'],
     foodAllergies: [],
+    favoriteFoodCategory: 'Street Bites & Coffee',
     specialInstructions: '',
     category: 'INACTIVE',
     loyaltyTier: 'Bronze',
@@ -729,6 +736,7 @@ export async function saveCustomer(customer: Partial<CustomerProfile>): Promise<
 
       dietaryPreferences: customer.dietaryPreferences || [],
       foodAllergies: customer.foodAllergies || [],
+      favoriteFoodCategory: customer.favoriteFoodCategory || 'Continental & Grills',
       specialInstructions: customer.specialInstructions || '',
 
       category: customer.category || 'NEW',

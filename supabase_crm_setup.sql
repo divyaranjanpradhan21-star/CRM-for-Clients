@@ -184,6 +184,39 @@ CREATE TABLE IF NOT EXISTS public.customers (
   created_at              TIMESTAMPTZ DEFAULT now()
 );
 
+-- ── 13. Dynamic Customer Segments Table ──────────────────────────────────────
+CREATE TABLE IF NOT EXISTS public.customer_segments (
+  id                      TEXT PRIMARY KEY,
+  name                    TEXT NOT NULL,
+  description             TEXT,
+  category                TEXT DEFAULT 'custom',
+  rules                   JSONB DEFAULT '{}'::jsonb,
+  member_count            INT DEFAULT 0,
+  total_spend             NUMERIC DEFAULT 0,
+  updated_at              TIMESTAMPTZ DEFAULT now(),
+  created_at              TIMESTAMPTZ DEFAULT now()
+);
+
+-- ── 14. Inbound Sales & Banquet Leads Table ──────────────────────────────────
+CREATE TABLE IF NOT EXISTS public.leads (
+  id                      TEXT PRIMARY KEY,
+  name                    TEXT NOT NULL,
+  phone                   TEXT,
+  email                   TEXT,
+  company                 TEXT,
+  source                  TEXT DEFAULT 'website_form',
+  priority                TEXT DEFAULT 'MEDIUM',
+  status                  TEXT DEFAULT 'NEW',
+  assigned_staff_name     TEXT,
+  estimated_value         NUMERIC DEFAULT 0,
+  next_follow_up_date     TEXT,
+  lost_reason             TEXT,
+  converted_customer_id   TEXT,
+  notes                   TEXT,
+  updated_at              TIMESTAMPTZ DEFAULT now(),
+  created_at              TIMESTAMPTZ DEFAULT now()
+);
+
 -- ==============================================================================
 -- PERMISSIVE ROW-LEVEL SECURITY (RLS) FOR DEVELOPMENT & DEMO ACCESS
 -- Allows your web app's anon publishable key to read and write without 401 errors
@@ -245,6 +278,14 @@ ALTER TABLE public.customers ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS "anon_full_access_customers" ON public.customers;
 CREATE POLICY "anon_full_access_customers" ON public.customers FOR ALL TO anon USING (true) WITH CHECK (true);
 
+ALTER TABLE public.customer_segments ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "anon_full_access_customer_segments" ON public.customer_segments;
+CREATE POLICY "anon_full_access_customer_segments" ON public.customer_segments FOR ALL TO anon USING (true) WITH CHECK (true);
+
+ALTER TABLE public.leads ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "anon_full_access_leads" ON public.leads;
+CREATE POLICY "anon_full_access_leads" ON public.leads FOR ALL TO anon USING (true) WITH CHECK (true);
+
 -- ==============================================================================
 -- INITIAL SEED DATA (Populates default records in your Supabase Tables)
 -- ==============================================================================
@@ -298,4 +339,12 @@ VALUES
   ('CUST-774019', 'Elena Rostova', 'elena.rostova@globalart.org', '+91 98700 33211', 'NEW', 'Bronze', 120, 480, 2, '1995-09-08', NULL, 'ACTIVE'),
   ('CUST-990312', 'Vikramaditya Singhania', 'v.singhania@indusgroup.com', '+91 98200 88776', 'VIP', 'Platinum', 6200, 22400, 41, '1972-04-18', '2000-12-08', 'ACTIVE'),
   ('CUST-331049', 'Aarav Nair', 'aarav.nair@metalogic.ai', '+91 98330 65432', 'INACTIVE', 'Bronze', 150, 620, 3, '1998-01-30', NULL, 'INACTIVE')
+ON CONFLICT (id) DO NOTHING;
+
+-- Seed Sample Leads
+INSERT INTO public.leads (id, name, phone, email, company, source, priority, status, assigned_staff_name, estimated_value, next_follow_up_date)
+VALUES
+  ('LEAD-90124', 'Ananya Deshmukh', '+91 98201 55432', 'ananya.deshmukh@tcs-events.com', 'Tata Consultancy Services', 'website_form', 'URGENT', 'PROPOSAL_SENT', 'Marco Rossi (Head Chef & Banquets)', 4200, '2026-11-20'),
+  ('LEAD-90125', 'Rohit Khandelwal', '+91 98210 77301', 'rohit.k@deloittedining.in', 'Deloitte Consulting', 'social_media_meta', 'HIGH', 'IN_DISCUSSION', 'Priya Sharma (Floor Manager)', 1850, '2026-11-19'),
+  ('LEAD-90126', 'Natasha Poonawalla', '+91 98200 11984', 'natasha.p@serumfamily.com', 'Poonawalla Heritage Trust', 'referral', 'HIGH', 'QUALIFIED', 'Priya Sharma (Floor Manager)', 6500, '2026-11-21')
 ON CONFLICT (id) DO NOTHING;
