@@ -206,15 +206,17 @@ export const EmployeeManagementView: React.FC<Props> = ({ orgId, currentUserRole
       return;
     }
     setIsSaving(true);
-    const ok = await saveEmployee(editingEmp);
+    const res = await saveEmployee(editingEmp);
     setIsSaving(false);
-    if (ok) {
+    const isSuccess = typeof res === 'object' ? res.success : Boolean(res);
+    if (isSuccess) {
       showToast(editingEmp.id ? 'Employee profile updated successfully' : 'New employee account created');
       setIsEditModalOpen(false);
       setEditingEmp(null);
       loadData();
     } else {
-      showToast('Failed to save employee to database', 'error');
+      const errMsg = typeof res === 'object' && res.error ? res.error : 'Failed to save employee to database';
+      showToast(errMsg, 'error');
     }
   };
 

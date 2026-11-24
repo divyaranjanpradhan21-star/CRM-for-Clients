@@ -325,15 +325,18 @@ export async function fetchDepartments(orgId?: string): Promise<DepartmentRecord
   return DEFAULT_DEPARTMENTS;
 }
 
-export async function saveEmployee(emp: Partial<EmployeeRecord>): Promise<boolean> {
+export async function saveEmployee(emp: Partial<EmployeeRecord>): Promise<{ success: boolean; error?: string }> {
   try {
-    if (!emp.fullName?.trim() || !emp.email?.trim()) {
-      return false;
+    if (!emp.fullName?.trim()) {
+      return { success: false, error: 'Full name is required' };
+    }
+    if (!emp.email?.trim()) {
+      return { success: false, error: 'Email address is required' };
     }
 
     const employees = loadEmployeesFromStorage();
     const isNew = !emp.id;
-    const empId = emp.id || `emp-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`;
+    const empId = emp.id || `emp-${Date.now().toString(36)}-${Math.random().toString(36).substring(2, 6)}`;
 
     // Resolve department and branch names
     const departments = DEFAULT_DEPARTMENTS;
@@ -374,13 +377,29 @@ export async function saveEmployee(emp: Partial<EmployeeRecord>): Promise<boolea
       details: `${record.fullName} (${record.role}) profile saved at branch ${record.branchName}.`,
     });
 
-    // Background sync to Supabase (safe & non-blocking)
-    syncEmployeeToSupabase(record).catch(() => {});
+    // Supabase sync (with explicit non-null id)
+    try {
+      await supabase.from('user_profiles').upsert({
+        id: record.id,
+        full_name: record.fullName,
+        email: record.email,
+        phone: record.phone,
+        role: record.role,
+        branch_id: record.branchId,
+        branch_name: record.branchName,
+        department_id: record.departmentId,
+        department_name: record.departmentName,
+        status: record.status,
+        updated_at: new Date().toISOString(),
+      });
+    } catch (sbErr) {
+      console.warn('Supabase sync notice (saved locally in storage):', sbErr);
+    }
 
-    return true;
-  } catch (err) {
+    return { success: true };
+  } catch (err: any) {
     console.error('Error saving employee:', err);
-    return false;
+    return { success: false, error: err?.message || 'Failed to save employee profile' };
   }
 }
 
