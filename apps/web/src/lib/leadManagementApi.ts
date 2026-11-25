@@ -1,4 +1,4 @@
-import { saveCustomer, generateCustomerId, CustomerProfile } from './customerManagementApi';
+import { saveCustomer, generateCustomerId, CustomerProfile, loadCustomersFromStorage } from './customerManagementApi';
 import { supabase } from './supabase';
 
 export type LeadSource =
@@ -12,14 +12,16 @@ export type LeadSource =
   | 'phone_inquiry'
   | 'corporate_sales';
 
+export type LeadType = 'Individual' | 'Corporate' | 'Event';
+
 export type LeadPriority = 'LOW' | 'MEDIUM' | 'HIGH' | 'URGENT';
 
 export type LeadStatus =
   | 'NEW'
   | 'CONTACTED'
-  | 'IN_DISCUSSION'
-  | 'PROPOSAL_SENT'
   | 'QUALIFIED'
+  | 'PROPOSAL_SENT'
+  | 'NEGOTIATION'
   | 'CONVERTED'
   | 'LOST';
 
@@ -42,30 +44,47 @@ export interface LeadInteraction {
   timestamp: string;
 }
 
+export interface LeadFollowUp {
+  id: string;
+  leadId: string;
+  leadName: string;
+  scheduledAt: string; // ISO string or YYYY-MM-DD
+  notes: string;
+  type: 'CALL' | 'EMAIL' | 'MEETING' | 'REVIEW';
+  status: 'PENDING' | 'COMPLETED' | 'OVERDUE';
+  completedAt?: string;
+}
+
 export interface LeadRecord {
   id: string; // e.g. "LEAD-40192"
   name: string;
   phone: string;
   email: string;
   company: string;
+  address?: string;
+  leadType: LeadType;
   source: LeadSource;
   sourceDetails?: string;
   priority: LeadPriority;
   status: LeadStatus;
 
-  // Assignment & Sales
-  assignedStaffId?: string;
-  assignedStaffName: string;
+  // Services & Financials
+  interestedServices?: string[];
+  expectedBudget?: number;
   estimatedValue: number; // In currency
   guestCount?: number;
   eventType?: 'Corporate Banquet' | 'Private Dining' | 'Birthday Celebration' | 'Wedding Reception' | 'Cocktail Party' | 'Catering Order';
   preferredDate?: string;
 
+  // Assignment & Sales Rep
+  assignedStaffId?: string;
+  assignedStaffName: string;
+
   // Follow-up
   nextFollowUpDate?: string; // YYYY-MM-DD or ISO
   followUpNotes?: string;
 
-  // Closure
+  // Closure & Conversion
   lostReason?: LostReason;
   lostNotes?: string;
   convertedCustomerId?: string;
@@ -86,11 +105,28 @@ export interface DuplicateLeadGroup {
   leads: LeadRecord[];
 }
 
+export interface SalespersonMetric {
+  staffId?: string;
+  staffName: string;
+  totalAssigned: number;
+  converted: number;
+  lost: number;
+  winRate: number;
+  totalValue: number;
+}
+
 export interface LeadConversionMetrics {
   totalLeads: number;
-  activeLeads: number;
+  newLeads: number;
+  contactedLeads: number;
+  qualifiedLeads: number;
+  proposalSentLeads: number;
+  negotiationLeads: number;
   convertedCount: number;
   lostCount: number;
+  activeLeads: number;
+  followUpsDue: number;
+  upcomingFollowUps: number;
   conversionRate: number;
   totalPipelineValue: number;
   wonPipelineValue: number;
@@ -103,11 +139,13 @@ export interface LeadConversionMetrics {
     revenue: number;
   }[];
   lostReasonsBreakdown: { reason: LostReason; count: number; percentage: number }[];
+  salespersonPerformance: SalespersonMetric[];
   averageDaysToConvert: number;
 }
 
-// ─── LOCAL STORAGE KEY ────────────────────────────────────────────────────────
+// ─── LOCAL STORAGE KEYS ───────────────────────────────────────────────────────
 const STORAGE_LEADS_KEY = 'crm_restaurant_leads';
+const STORAGE_FOLLOWUPS_KEY = 'crm_restaurant_lead_followups';
 
 // ─── INITIAL SEED LEADS ───────────────────────────────────────────────────────
 const INITIAL_LEADS: LeadRecord[] = [
@@ -117,6 +155,8 @@ const INITIAL_LEADS: LeadRecord[] = [
     phone: '+91 98201 55432',
     email: 'ananya.deshmukh@tcs-events.com',
     company: 'Tata Consultancy Services',
+    address: 'Bandra Kurla Complex, Mumbai',
+    leadType: 'Corporate',
     source: 'website_form',
     sourceDetails: 'Corporate Year-End Banquet Booking Form (80 Guests)',
     priority: 'URGENT',
@@ -124,6 +164,8 @@ const INITIAL_LEADS: LeadRecord[] = [
     assignedStaffId: 'emp-001',
     assignedStaffName: 'Marco Rossi (Head Chef & Banquets)',
     estimatedValue: 4200.0,
+    expectedBudget: 4500.0,
+    interestedServices: ['Private Mezzanine Hall', '4-Course Banquet', 'AV Projector Setup'],
     guestCount: 80,
     eventType: 'Corporate Banquet',
     preferredDate: '2026-12-18',
@@ -165,13 +207,17 @@ const INITIAL_LEADS: LeadRecord[] = [
     phone: '+91 98210 77301',
     email: 'rohit.k@deloittedining.in',
     company: 'Deloitte Consulting',
+    address: 'Lower Parel, Mumbai',
+    leadType: 'Corporate',
     source: 'social_media_meta',
     sourceDetails: 'Meta Lead Form: Premium Weekend Brunch & Private Dining Ad',
     priority: 'HIGH',
-    status: 'IN_DISCUSSION',
+    status: 'NEGOTIATION',
     assignedStaffId: 'emp-002',
     assignedStaffName: 'Priya Sharma (Floor Manager)',
     estimatedValue: 1850.0,
+    expectedBudget: 2000.0,
+    interestedServices: ['Terrace Garden Alcove', 'Leadership Dinner', 'Wine Pairings'],
     guestCount: 30,
     eventType: 'Private Dining',
     preferredDate: '2026-11-29',
@@ -201,102 +247,106 @@ const INITIAL_LEADS: LeadRecord[] = [
   },
   {
     id: 'LEAD-90126',
-    name: 'Natasha Poonawalla',
-    phone: '+91 98200 11984',
-    email: 'natasha.p@serumfamily.com',
-    company: 'Poonawalla Heritage Trust',
+    name: 'Dr. Siddharth Mehta',
+    phone: '+91 98330 11994',
+    email: 'dr.mehta@cardio-specialists.org',
+    company: 'Mumbai Cardiology Association',
+    address: 'Worli Seaface, Mumbai',
+    leadType: 'Event',
     source: 'referral',
-    sourceDetails: 'Referred by Alexander Wright (VIP Platinum Patron)',
+    sourceDetails: 'Referral from VIP Patron Alexander Wright',
     priority: 'HIGH',
     status: 'QUALIFIED',
-    assignedStaffId: 'emp-002',
-    assignedStaffName: 'Priya Sharma (Floor Manager)',
-    estimatedValue: 6500.0,
-    guestCount: 120,
-    eventType: 'Cocktail Party',
-    preferredDate: '2026-12-24',
-    nextFollowUpDate: new Date(Date.now() + 2 * 86400000).toISOString().split('T')[0],
-    followUpNotes: 'Final contract signing and 25% deposit collection.',
-    notes: 'Christmas Eve Gala. Client confirmed agreement to premium package.',
+    assignedStaffId: 'emp-001',
+    assignedStaffName: 'Marco Rossi (Head Chef & Banquets)',
+    estimatedValue: 3100.0,
+    expectedBudget: 3500.0,
+    interestedServices: ['Private Dining Hall', 'Custom Heart-Healthy Menu', 'Champagne Welcome'],
+    guestCount: 50,
+    eventType: 'Private Dining',
+    preferredDate: '2026-12-05',
+    nextFollowUpDate: new Date(Date.now() + 172800000).toISOString().split('T')[0],
+    followUpNotes: 'Prepare heart-healthy olive oil and wild caught seafood custom tasting menu proposal.',
+    notes: 'Annual Medical Society celebratory dinner. High aesthetic expectations.',
     interactionHistory: [
       {
         id: 'int-6',
-        type: 'MEETING',
-        summary: 'In-person Tasting & Venue Walkthrough',
-        details: 'Sampled signature hors d\'oeuvres and approved bespoke cocktail menu.',
-        performedBy: 'Priya Sharma & Marco Rossi',
-        timestamp: '2026-11-14T17:00:00.000Z',
-      },
-      {
-        id: 'int-7',
         type: 'NOTE',
-        summary: 'Lead Qualified as Ready to Convert',
-        details: 'Agreed on $6,500 budget for full venue buyout on Dec 24 evening.',
-        performedBy: 'Priya Sharma',
-        timestamp: '2026-11-18T16:30:00.000Z',
+        summary: 'Referred by Alexander Wright',
+        details: 'VIP referral notes: loves Tuscan grilled sea bass and vintage Barolo.',
+        performedBy: 'Floor Concierge',
+        timestamp: '2026-11-18T16:00:00.000Z',
       },
     ],
-    createdAt: '2026-11-12T14:20:00.000Z',
+    createdAt: '2026-11-18T16:00:00.000Z',
     updatedAt: new Date().toISOString(),
   },
   {
     id: 'LEAD-90127',
-    name: 'Siddharth Varma',
-    phone: '+91 98330 99411',
-    email: 'siddharth@fintechapex.co',
-    company: 'Fintech Apex Ltd',
-    source: 'google_ads',
-    sourceDetails: 'Google Search Ad: "Luxury Restaurant for Birthday Dinner Mumbai"',
-    priority: 'MEDIUM',
+    name: 'Natasha Poonawalla',
+    phone: '+91 98199 44321',
+    email: 'natasha.p@poonawalla-holding.com',
+    company: 'Poonawalla Estates',
+    address: 'South Mumbai',
+    leadType: 'Individual',
+    source: 'phone_inquiry',
+    sourceDetails: 'Direct VIP Concierge Phone Call',
+    priority: 'URGENT',
     status: 'CONTACTED',
-    assignedStaffId: 'emp-003',
-    assignedStaffName: 'Dev Patel (Senior Barista & Host)',
-    estimatedValue: 850.0,
+    assignedStaffId: 'emp-002',
+    assignedStaffName: 'Priya Sharma (Floor Manager)',
+    estimatedValue: 2400.0,
+    expectedBudget: 3000.0,
+    interestedServices: ['Candlelight Dinner', 'Vintage Champagne', 'Acoustic Violinist'],
     guestCount: 16,
     eventType: 'Birthday Celebration',
-    preferredDate: '2026-12-05',
+    preferredDate: '2026-12-02',
     nextFollowUpDate: new Date(Date.now() - 86400000).toISOString().split('T')[0], // Overdue!
-    followUpNotes: 'Follow up on birthday cake selection and custom champagne toast.',
-    notes: '30th birthday dinner with friends. Requesting custom chocolate raspberry gateau.',
+    followUpNotes: 'Follow up on floral centerpieces and acoustic violinist confirmation.',
+    notes: 'Private birthday celebration. Requested live acoustic violinist arrangement.',
     interactionHistory: [
       {
-        id: 'int-8',
-        type: 'EMAIL',
-        summary: 'Introductory Email with Cake Portfolio',
-        details: 'Sent dessert catalog and pricing tiers.',
-        performedBy: 'Dev Patel',
-        timestamp: '2026-11-16T12:00:00.000Z',
+        id: 'int-7',
+        type: 'CALL',
+        summary: 'Incoming Call to Concierge',
+        details: 'Discussed date availability and minimum spend requirements for the Cellar Room.',
+        performedBy: 'Priya Sharma',
+        timestamp: '2026-11-19T11:30:00.000Z',
       },
     ],
-    createdAt: '2026-11-16T11:45:00.000Z',
+    createdAt: '2026-11-19T11:30:00.000Z',
     updatedAt: new Date().toISOString(),
   },
   {
     id: 'LEAD-90128',
-    name: 'Kavita Singhal',
-    phone: '+91 98190 22345',
-    email: 'kavita.singhal@zenithmedia.in',
-    company: 'Zenith Media House',
-    source: 'social_media_instagram',
-    sourceDetails: 'Instagram Story Direct Message Inquiry',
-    priority: 'LOW',
+    name: 'Kavita Singhania',
+    phone: '+91 98204 88120',
+    email: 'kavita.singhania@apex-ventures.in',
+    company: 'Apex Ventures Capital',
+    address: 'Nariman Point, Mumbai',
+    leadType: 'Corporate',
+    source: 'website_form',
+    sourceDetails: 'Inquiry via Website Contact Page',
+    priority: 'MEDIUM',
     status: 'NEW',
     assignedStaffId: 'emp-002',
     assignedStaffName: 'Priya Sharma (Floor Manager)',
-    estimatedValue: 600.0,
-    guestCount: 12,
-    eventType: 'Private Dining',
+    estimatedValue: 1200.0,
+    expectedBudget: 1500.0,
+    interestedServices: ['Buffet Lunch', 'Private Boardroom Table'],
+    guestCount: 22,
+    eventType: 'Corporate Banquet',
     preferredDate: '2026-12-10',
-    nextFollowUpDate: new Date(Date.now() + 86400000).toISOString().split('T')[0],
-    followUpNotes: 'Initial contact to understand exact requirements.',
-    notes: 'Inquired through Instagram DM regarding Sunday brunch table reservation for 12.',
+    nextFollowUpDate: new Date().toISOString().split('T')[0], // Due Today
+    followUpNotes: 'Schedule discovery call regarding quarterly board meeting buffet requirements.',
+    notes: 'Looking for a quiet semi-private room with high-speed WiFi and lunch buffet.',
     interactionHistory: [
       {
-        id: 'int-9',
+        id: 'int-8',
         type: 'NOTE',
-        summary: 'Instagram DM Lead Ingestion',
-        details: 'Inbound message from @kavitasinghal inquiring for Sunday brunch reservation.',
-        performedBy: 'Instagram Social CRM Hook',
+        summary: 'Inbound Web Submission Received',
+        details: 'Submitted request for 22 guests on Dec 10th.',
+        performedBy: 'Web Gateway',
         timestamp: new Date().toISOString(),
       },
     ],
@@ -309,6 +359,8 @@ const INITIAL_LEADS: LeadRecord[] = [
     phone: '+91 98200 44882',
     email: 'm.talwar@talwarlogistics.com',
     company: 'Talwar Logistics Solutions',
+    address: 'Vashi, Navi Mumbai',
+    leadType: 'Corporate',
     source: 'phone_inquiry',
     sourceDetails: 'Inbound Phone Call to Front Desk',
     priority: 'MEDIUM',
@@ -316,6 +368,8 @@ const INITIAL_LEADS: LeadRecord[] = [
     assignedStaffId: 'emp-001',
     assignedStaffName: 'Marco Rossi (Head Chef & Banquets)',
     estimatedValue: 3500.0,
+    expectedBudget: 2000.0,
+    interestedServices: ['Buffet with Alcohol'],
     guestCount: 60,
     eventType: 'Corporate Banquet',
     lostReason: 'price_too_high',
@@ -348,6 +402,8 @@ const INITIAL_LEADS: LeadRecord[] = [
     phone: '+91 98205 66778',
     email: 'vikram.sethi@venturespark.co',
     company: 'Venture Spark Accelerator',
+    address: 'Indiranagar, Bangalore',
+    leadType: 'Corporate',
     source: 'linkedin',
     sourceDetails: 'LinkedIn Inbound Message to Restaurant Owner',
     priority: 'HIGH',
@@ -355,6 +411,8 @@ const INITIAL_LEADS: LeadRecord[] = [
     assignedStaffId: 'emp-001',
     assignedStaffName: 'Marco Rossi (Head Chef & Banquets)',
     estimatedValue: 2800.0,
+    expectedBudget: 3000.0,
+    interestedServices: ['Accelerator Demo Day Dinner', 'Buffet & Drinks'],
     guestCount: 45,
     eventType: 'Corporate Banquet',
     convertedCustomerId: 'CUST-10495',
@@ -409,31 +467,20 @@ export function saveLeadsToStorage(leads: LeadRecord[]): void {
   }
 }
 
-/**
- * Fetches all leads sorted by urgency and creation date
- */
 export async function fetchLeads(): Promise<LeadRecord[]> {
   const leads = loadLeadsFromStorage();
   
-  // Non-blocking sync to Supabase
-  Promise.resolve(
-    supabase.from('leads').select('id').limit(1)
-  ).catch(() => {});
+  // Non-blocking sync to Supabase if table exists
+  Promise.resolve(supabase.from('leads').select('id').limit(1)).catch(() => {});
 
   return leads;
 }
 
-/**
- * Generates a unique lead ID e.g. "LEAD-48201"
- */
 export function generateLeadId(): string {
   const num = Math.floor(10000 + Math.random() * 90000);
   return `LEAD-${num}`;
 }
 
-/**
- * Saves a new or updated lead
- */
 export async function saveLead(
   leadData: Partial<LeadRecord>
 ): Promise<{ success: boolean; lead?: LeadRecord; error?: string }> {
@@ -452,6 +499,8 @@ export async function saveLead(
       phone: leadData.phone?.trim() || '',
       email: leadData.email?.trim().toLowerCase() || '',
       company: leadData.company?.trim() || 'Individual Guest',
+      address: leadData.address?.trim() || '',
+      leadType: leadData.leadType || 'Individual',
       source: leadData.source || 'website_form',
       sourceDetails: leadData.sourceDetails?.trim() || 'Inbound Direct Inquiry',
       priority: leadData.priority || 'MEDIUM',
@@ -459,6 +508,8 @@ export async function saveLead(
       assignedStaffId: leadData.assignedStaffId || 'emp-002',
       assignedStaffName: leadData.assignedStaffName || 'Priya Sharma (Floor Manager)',
       estimatedValue: Number(leadData.estimatedValue) || 500,
+      expectedBudget: Number(leadData.expectedBudget) || Number(leadData.estimatedValue) || 500,
+      interestedServices: leadData.interestedServices || ['Table Dining'],
       guestCount: leadData.guestCount ? Number(leadData.guestCount) : undefined,
       eventType: leadData.eventType || 'Private Dining',
       preferredDate: leadData.preferredDate,
@@ -516,9 +567,6 @@ export async function saveLead(
   }
 }
 
-/**
- * Assigns lead to a staff member
- */
 export async function assignLeadToStaff(
   leadId: string,
   staffId: string,
@@ -536,8 +584,8 @@ export async function assignLeadToStaff(
     id: `int-${Date.now()}`,
     type: 'NOTE',
     summary: `Lead Reassigned to ${staffName}`,
-    details: `Owner updated by administration team.`,
-    performedBy: 'System',
+    details: `Sales representative ownership updated.`,
+    performedBy: 'System Administrator',
     timestamp: new Date().toISOString(),
   });
 
@@ -545,9 +593,6 @@ export async function assignLeadToStaff(
   return { success: true };
 }
 
-/**
- * Updates lead status with optional lost reason tracking
- */
 export async function updateLeadStatus(
   leadId: string,
   status: LeadStatus,
@@ -569,8 +614,8 @@ export async function updateLeadStatus(
   lead.interactionHistory.unshift({
     id: `int-${Date.now()}`,
     type: 'NOTE',
-    summary: `Status Changed: ${previousStatus} -> ${status}`,
-    details: status === 'LOST' ? `Lost Reason: ${options?.lostReason || 'other'} - ${options?.lostNotes || ''}` : `Lead pipeline stage updated.`,
+    summary: `Pipeline Stage: ${previousStatus} -> ${status}`,
+    details: status === 'LOST' ? `Lost Reason: ${options?.lostReason || 'other'} - ${options?.lostNotes || ''}` : `Stage advanced in sales pipeline.`,
     performedBy: lead.assignedStaffName || 'Staff Admin',
     timestamp: new Date().toISOString(),
   });
@@ -579,9 +624,6 @@ export async function updateLeadStatus(
   return { success: true, lead };
 }
 
-/**
- * Adds an interaction (Call, Email, WhatsApp, Meeting, Note) to lead history
- */
 export async function addLeadInteraction(
   leadId: string,
   interaction: Omit<LeadInteraction, 'id' | 'timestamp'>
@@ -599,7 +641,6 @@ export async function addLeadInteraction(
   lead.interactionHistory.unshift(newEntry);
   lead.updatedAt = new Date().toISOString();
 
-  // If status is 'NEW', auto advance to 'CONTACTED' on first call/email/whatsapp
   if (lead.status === 'NEW' && ['CALL', 'EMAIL', 'WHATSAPP'].includes(interaction.type)) {
     lead.status = 'CONTACTED';
   }
@@ -608,13 +649,11 @@ export async function addLeadInteraction(
   return { success: true };
 }
 
-/**
- * Schedules follow-up date and reminder note for a lead
- */
 export async function scheduleLeadFollowUp(
   leadId: string,
   followUpDate: string,
-  followUpNotes?: string
+  followUpNotes?: string,
+  type: LeadFollowUp['type'] = 'CALL'
 ): Promise<{ success: boolean; error?: string }> {
   const leads = loadLeadsFromStorage();
   const lead = leads.find((l) => l.id === leadId);
@@ -627,8 +666,8 @@ export async function scheduleLeadFollowUp(
   lead.interactionHistory.unshift({
     id: `int-${Date.now()}`,
     type: 'NOTE',
-    summary: `Follow-up Scheduled for ${followUpDate}`,
-    details: followUpNotes || 'Next check-in scheduled.',
+    summary: `Follow-up Scheduled: ${followUpDate}`,
+    details: followUpNotes || `${type} scheduled with patron.`,
     performedBy: lead.assignedStaffName || 'Staff Admin',
     timestamp: new Date().toISOString(),
   });
@@ -637,10 +676,6 @@ export async function scheduleLeadFollowUp(
   return { success: true };
 }
 
-/**
- * CONVERT QUALIFIED LEAD INTO CUSTOMER
- * Automatically registers customer in customer database with full link!
- */
 export async function convertLeadToCustomer(
   leadId: string
 ): Promise<{ success: boolean; customerId?: string; error?: string }> {
@@ -649,70 +684,75 @@ export async function convertLeadToCustomer(
     const lead = leads.find((l) => l.id === leadId);
     if (!lead) return { success: false, error: 'Lead not found' };
 
-    const newCustomerId = generateCustomerId();
+    // Check if customer already exists by phone or email
+    const existingCustomers = loadCustomersFromStorage();
+    const matched = existingCustomers.find(
+      (c) =>
+        (lead.phone && c.mobile && c.mobile.replace(/\D/g, '') === lead.phone.replace(/\D/g, '')) ||
+        (lead.email && c.email && c.email.toLowerCase() === lead.email.toLowerCase())
+    );
 
-    // Create Customer profile in Customer Database
-    const newCustomer: Partial<CustomerProfile> = {
-      id: newCustomerId,
-      fullName: lead.name,
-      email: lead.email,
-      mobile: lead.phone,
-      address: {
-        street: lead.company ? `c/o ${lead.company}` : '',
-        city: 'Mumbai',
-        state: 'Maharashtra',
-        postalCode: '400001',
-        country: 'India',
-      },
-      category: 'NEW',
-      loyaltyTier: 'Bronze',
-      loyaltyPoints: 100, // Welcome points
-      lifetimePointsEarned: 100,
-      totalSpend: lead.estimatedValue || 0,
-      totalOrders: 1,
-      totalVisits: 1,
-      registeredSource: 'Manual Admin',
-      favoriteBranch: 'Downtown Flagship #01',
-      specialInstructions: `Converted from Sales Lead (${lead.id} - ${lead.company || 'Private Event'}). Event: ${lead.eventType || 'Banquet'}.`,
-    };
+    let customerIdToLink = matched ? matched.id : generateCustomerId();
 
-    const saveRes = await saveCustomer(newCustomer);
-    if (!saveRes.success) {
-      return { success: false, error: saveRes.error || 'Failed to create customer profile' };
+    if (!matched) {
+      const newCustomer: Partial<CustomerProfile> = {
+        id: customerIdToLink,
+        fullName: lead.name,
+        email: lead.email,
+        mobile: lead.phone,
+        address: {
+          street: lead.address || (lead.company ? `c/o ${lead.company}` : ''),
+          city: 'Mumbai',
+          state: 'Maharashtra',
+          postalCode: '400001',
+          country: 'India',
+        },
+        category: 'NEW',
+        loyaltyTier: 'Bronze',
+        loyaltyPoints: 100,
+        status: 'Active',
+        totalSpend: lead.estimatedValue || 0,
+        totalOrders: 1,
+        totalVisits: 1,
+        registeredSource: 'Manual Admin',
+        favoriteBranch: 'Downtown Flagship #01',
+        customerNotes: `Converted from Sales Lead (${lead.id} - ${lead.company || 'Private Event'}). Lead Type: ${lead.leadType}. Services: ${(lead.interestedServices || []).join(', ')}.`,
+      };
+
+      const saveRes = await saveCustomer(newCustomer);
+      if (!saveRes.success) {
+        return { success: false, error: saveRes.error || 'Failed to create customer record' };
+      }
     }
 
     // Update lead record
     lead.status = 'CONVERTED';
-    lead.convertedCustomerId = newCustomerId;
+    lead.convertedCustomerId = customerIdToLink;
     lead.convertedAt = new Date().toISOString();
     lead.updatedAt = new Date().toISOString();
 
     lead.interactionHistory.unshift({
       id: `int-${Date.now()}`,
       type: 'NOTE',
-      summary: `Lead Converted to Customer (${newCustomerId})`,
-      details: `Official patron profile generated. Lifetime spend initialized with estimated booking value of $${lead.estimatedValue}.`,
-      performedBy: 'System Auto-Convert',
+      summary: `Lead Converted to Customer (${customerIdToLink})`,
+      details: `Customer record ${matched ? 'linked to existing' : 'newly registered'} profile #${customerIdToLink}. Booking value: $${lead.estimatedValue}.`,
+      performedBy: 'Sales CRM Gateway',
       timestamp: new Date().toISOString(),
     });
 
     saveLeadsToStorage(leads);
-    return { success: true, customerId: newCustomerId };
+    return { success: true, customerId: customerIdToLink };
   } catch (err: any) {
     return { success: false, error: err?.message || 'Conversion failed' };
   }
 }
 
-/**
- * Detects duplicate leads by phone or email
- */
 export function detectDuplicateLeads(leads: LeadRecord[]): DuplicateLeadGroup[] {
   const groups: DuplicateLeadGroup[] = [];
   const phoneMap = new Map<string, LeadRecord[]>();
   const emailMap = new Map<string, LeadRecord[]>();
 
   leads.forEach((lead) => {
-    // Normalize phone (remove spaces and non-digits)
     const normPhone = lead.phone.replace(/[^0-9]/g, '');
     if (normPhone && normPhone.length >= 7) {
       const existing = phoneMap.get(normPhone) || [];
@@ -720,7 +760,6 @@ export function detectDuplicateLeads(leads: LeadRecord[]): DuplicateLeadGroup[] 
       phoneMap.set(normPhone, existing);
     }
 
-    // Normalize email
     const normEmail = lead.email.toLowerCase().trim();
     if (normEmail && normEmail.includes('@')) {
       const existing = emailMap.get(normEmail) || [];
@@ -729,7 +768,6 @@ export function detectDuplicateLeads(leads: LeadRecord[]): DuplicateLeadGroup[] 
     }
   });
 
-  // Group by Phone duplicates
   phoneMap.forEach((matched, phone) => {
     if (matched.length > 1) {
       groups.push({
@@ -741,7 +779,6 @@ export function detectDuplicateLeads(leads: LeadRecord[]): DuplicateLeadGroup[] 
     }
   });
 
-  // Group by Email duplicates (avoid duplicating pairs already matched by phone)
   emailMap.forEach((matched, email) => {
     if (matched.length > 1) {
       const leadIds = matched.map((l) => l.id).sort().join(',');
@@ -762,9 +799,6 @@ export function detectDuplicateLeads(leads: LeadRecord[]): DuplicateLeadGroup[] 
   return groups;
 }
 
-/**
- * Merges two duplicate leads into one primary record
- */
 export async function mergeDuplicateLeads(
   primaryLeadId: string,
   secondaryLeadId: string
@@ -778,8 +812,7 @@ export async function mergeDuplicateLeads(
       return { success: false, error: 'One or both leads not found' };
     }
 
-    // Merge notes & interactions
-    primary.notes = `${primary.notes}\n[Merged Notes from ${secondary.id}]: ${secondary.notes}`.trim();
+    primary.notes = `${primary.notes}\n[Merged from ${secondary.id}]: ${secondary.notes}`.trim();
     primary.interactionHistory = [
       ...primary.interactionHistory,
       ...secondary.interactionHistory,
@@ -787,18 +820,16 @@ export async function mergeDuplicateLeads(
         id: `int-${Date.now()}`,
         type: 'NOTE' as const,
         summary: `Merged Duplicate Lead ${secondary.id}`,
-        details: `Combined timeline, guest count (${secondary.guestCount || 0}), and contact notes into ${primary.id}.`,
+        details: `Combined timeline, guest count (${secondary.guestCount || 0}), and contact history.`,
         performedBy: 'Staff Admin',
         timestamp: new Date().toISOString(),
       },
     ].sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
 
-    // Higher estimated value wins
     if (secondary.estimatedValue > primary.estimatedValue) {
       primary.estimatedValue = secondary.estimatedValue;
     }
 
-    // Remove secondary lead
     const filteredLeads = leads.filter((l) => l.id !== secondaryLeadId);
     saveLeadsToStorage(filteredLeads);
 
@@ -808,20 +839,20 @@ export async function mergeDuplicateLeads(
   }
 }
 
-/**
- * INBOUND LEAD CAPTURE INTEGRATION SIMULATOR / WEBHOOK
- * Supports website inquiry forms, Instagram ads, Meta lead ads, Google Ads
- */
 export async function captureInboundLead(payload: {
   source: LeadSource;
+  leadType?: LeadType;
   name: string;
   phone: string;
   email: string;
   company?: string;
+  address?: string;
   sourceDetails: string;
   eventType?: LeadRecord['eventType'];
   guestCount?: number;
+  expectedBudget?: number;
   estimatedValue?: number;
+  interestedServices?: string[];
   notes?: string;
 }): Promise<LeadRecord> {
   const newLead: Partial<LeadRecord> = {
@@ -830,6 +861,8 @@ export async function captureInboundLead(payload: {
     phone: payload.phone,
     email: payload.email,
     company: payload.company || 'Inbound Web Guest',
+    address: payload.address || '',
+    leadType: payload.leadType || (payload.company ? 'Corporate' : 'Individual'),
     source: payload.source,
     sourceDetails: payload.sourceDetails,
     priority: payload.guestCount && payload.guestCount >= 50 ? 'URGENT' : 'HIGH',
@@ -837,17 +870,19 @@ export async function captureInboundLead(payload: {
     assignedStaffName: 'Priya Sharma (Floor Manager)',
     assignedStaffId: 'emp-002',
     estimatedValue: payload.estimatedValue || (payload.guestCount ? payload.guestCount * 45 : 1200),
+    expectedBudget: payload.expectedBudget || payload.estimatedValue || 1200,
+    interestedServices: payload.interestedServices || ['Event Banquet'],
     guestCount: payload.guestCount || 20,
     eventType: payload.eventType || 'Corporate Banquet',
     nextFollowUpDate: new Date().toISOString().split('T')[0], // Immediate due today
-    followUpNotes: `Inbound ${payload.source.replace('_', ' ')} lead. Immediate response recommended within 30 minutes SLA.`,
+    followUpNotes: `Inbound ${payload.source.replace('_', ' ')} lead. Response recommended within 30m SLA.`,
     notes: payload.notes || `Inbound webhook lead submission from ${payload.sourceDetails}`,
     interactionHistory: [
       {
         id: `int-${Date.now()}`,
         type: 'NOTE' as const,
         summary: `Inbound Lead Ingested via ${payload.sourceDetails}`,
-        details: `Auto-captured and routed to service floor queue.`,
+        details: `Auto-captured and routed to front-desk sales pipeline.`,
         performedBy: 'Lead Integration Gateway',
         timestamp: new Date().toISOString(),
       },
@@ -858,34 +893,44 @@ export async function captureInboundLead(payload: {
   return res.lead!;
 }
 
-/**
- * Calculates high-level lead conversion metrics & analytics
- */
 export function getLeadConversionMetrics(leads: LeadRecord[]): LeadConversionMetrics {
   const totalLeads = leads.length;
+  const newLeads = leads.filter((l) => l.status === 'NEW').length;
+  const contactedLeads = leads.filter((l) => l.status === 'CONTACTED').length;
+  const qualifiedLeads = leads.filter((l) => l.status === 'QUALIFIED').length;
+  const proposalSentLeads = leads.filter((l) => l.status === 'PROPOSAL_SENT').length;
+  const negotiationLeads = leads.filter((l) => l.status === 'NEGOTIATION').length;
   const convertedLeads = leads.filter((l) => l.status === 'CONVERTED');
   const lostLeads = leads.filter((l) => l.status === 'LOST');
-  const activeLeads = leads.filter((l) => !['CONVERTED', 'LOST'].includes(l.status));
+  const activeLeads = leads.filter((l) => !['CONVERTED', 'LOST'].includes(l.status)).length;
+
+  const todayStr = new Date().toISOString().split('T')[0];
+  let followUpsDue = 0;
+  let upcomingFollowUps = 0;
+
+  leads.forEach((l) => {
+    if (!['CONVERTED', 'LOST'].includes(l.status) && l.nextFollowUpDate) {
+      if (l.nextFollowUpDate <= todayStr) {
+        followUpsDue++;
+      } else {
+        upcomingFollowUps++;
+      }
+    }
+  });
 
   const totalPipelineValue = leads.reduce((sum, l) => sum + (l.estimatedValue || 0), 0);
   const wonPipelineValue = convertedLeads.reduce((sum, l) => sum + (l.estimatedValue || 0), 0);
   const conversionRate = totalLeads > 0 ? Number(((convertedLeads.length / totalLeads) * 100).toFixed(1)) : 0;
 
   const stageBreakdown: { [key in LeadStatus]: number } = {
-    NEW: 0,
-    CONTACTED: 0,
-    IN_DISCUSSION: 0,
-    PROPOSAL_SENT: 0,
-    QUALIFIED: 0,
-    CONVERTED: 0,
-    LOST: 0,
+    NEW: newLeads,
+    CONTACTED: contactedLeads,
+    QUALIFIED: qualifiedLeads,
+    PROPOSAL_SENT: proposalSentLeads,
+    NEGOTIATION: negotiationLeads,
+    CONVERTED: convertedLeads.length,
+    LOST: lostLeads.length,
   };
-
-  leads.forEach((l) => {
-    if (stageBreakdown[l.status] !== undefined) {
-      stageBreakdown[l.status]++;
-    }
-  });
 
   // Source breakdown
   const sourceMap = new Map<LeadSource, { count: number; converted: number; revenue: number }>();
@@ -920,6 +965,27 @@ export function getLeadConversionMetrics(leads: LeadRecord[]): LeadConversionMet
     percentage: lostLeads.length > 0 ? Number(((count / lostLeads.length) * 100).toFixed(1)) : 0,
   })).sort((a, b) => b.count - a.count);
 
+  // Salesperson Leaderboard & Performance
+  const staffMap = new Map<string, { staffName: string; totalAssigned: number; converted: number; lost: number; totalValue: number }>();
+  leads.forEach((l) => {
+    const key = l.assignedStaffName || 'Unassigned';
+    const curr = staffMap.get(key) || { staffName: key, totalAssigned: 0, converted: 0, lost: 0, totalValue: 0 };
+    curr.totalAssigned++;
+    curr.totalValue += l.estimatedValue || 0;
+    if (l.status === 'CONVERTED') curr.converted++;
+    if (l.status === 'LOST') curr.lost++;
+    staffMap.set(key, curr);
+  });
+
+  const salespersonPerformance: SalespersonMetric[] = Array.from(staffMap.values()).map((s) => ({
+    staffName: s.staffName,
+    totalAssigned: s.totalAssigned,
+    converted: s.converted,
+    lost: s.lost,
+    winRate: s.totalAssigned > 0 ? Number(((s.converted / s.totalAssigned) * 100).toFixed(1)) : 0,
+    totalValue: s.totalValue,
+  })).sort((a, b) => b.converted - a.converted);
+
   // Average days to convert
   let totalConversionDays = 0;
   let validConversions = 0;
@@ -937,15 +1003,72 @@ export function getLeadConversionMetrics(leads: LeadRecord[]): LeadConversionMet
 
   return {
     totalLeads,
-    activeLeads: activeLeads.length,
+    newLeads,
+    contactedLeads,
+    qualifiedLeads,
+    proposalSentLeads,
+    negotiationLeads,
     convertedCount: convertedLeads.length,
     lostCount: lostLeads.length,
+    activeLeads,
+    followUpsDue,
+    upcomingFollowUps,
     conversionRate,
     totalPipelineValue,
     wonPipelineValue,
     stageBreakdown,
     sourceBreakdown,
     lostReasonsBreakdown,
+    salespersonPerformance,
     averageDaysToConvert,
   };
+}
+
+export function exportLeadsToCSV(leads: LeadRecord[]): void {
+  const headers = [
+    'Lead ID',
+    'Full Name',
+    'Company',
+    'Lead Type',
+    'Email',
+    'Phone',
+    'Source',
+    'Status',
+    'Priority',
+    'Assigned Salesperson',
+    'Estimated Value ($)',
+    'Expected Budget ($)',
+    'Guest Count',
+    'Event Type',
+    'Next Follow-Up Date',
+    'Created Date',
+  ];
+
+  const rows = leads.map((l) => [
+    l.id,
+    `"${l.name.replace(/"/g, '""')}"`,
+    `"${(l.company || '').replace(/"/g, '""')}"`,
+    l.leadType,
+    l.email,
+    l.phone,
+    l.source,
+    l.status,
+    l.priority,
+    `"${l.assignedStaffName.replace(/"/g, '""')}"`,
+    l.estimatedValue.toFixed(2),
+    (l.expectedBudget || l.estimatedValue).toFixed(2),
+    l.guestCount || '—',
+    `"${l.eventType || ''}"`,
+    l.nextFollowUpDate || '—',
+    l.createdAt.split('T')[0],
+  ]);
+
+  const csvContent = 'data:text/csv;charset=utf-8,' + [headers.join(','), ...rows.map((e) => e.join(','))].join('\n');
+  const encodedUri = encodeURI(csvContent);
+  const link = document.createElement('a');
+  link.setAttribute('href', encodedUri);
+  link.setAttribute('download', `restaurant_leads_export_${new Date().toISOString().split('T')[0]}.csv`);
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
 }

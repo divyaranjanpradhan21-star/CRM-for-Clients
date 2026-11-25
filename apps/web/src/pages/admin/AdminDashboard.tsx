@@ -10,6 +10,7 @@ import { RestaurantSettingsView } from './RestaurantSettingsView';
 import { CustomerManagementView } from './CustomerManagementView';
 import { CustomerSegmentationView } from './CustomerSegmentationView';
 import { LeadManagementView } from './LeadManagementView';
+import { ReservationManagementView } from './ReservationManagementView';
 import {
   LayoutDashboard,
   Receipt,
@@ -489,7 +490,6 @@ export const AdminDashboard: React.FC = () => {
                       key={item.id}
                       onClick={() => {
                         setActiveTab(item.id as any);
-                        if (item.id === 'reservations') openDrillDown('reservations', 'Reservations Ledger', 'All bookings by status');
                         if (item.id === 'orders') openDrillDown('orders', 'Order Transactions & Tickets', 'Realtime POS receipts');
                         if (item.id === 'menu') openDrillDown('menu_items', 'Menu Items Performance', 'Sales and profitability');
                         if (item.id === 'staff') openDrillDown('staff', 'Staff Shifts & Efficiency', 'Service crew analytics');
@@ -575,6 +575,10 @@ export const AdminDashboard: React.FC = () => {
               />
             ) : activeTab === 'leads' ? (
               <LeadManagementView
+                orgId={orgId}
+              />
+            ) : activeTab === 'reservations' ? (
+              <ReservationManagementView
                 orgId={orgId}
               />
             ) : (
