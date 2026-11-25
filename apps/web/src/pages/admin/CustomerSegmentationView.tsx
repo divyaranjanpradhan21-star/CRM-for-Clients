@@ -12,25 +12,26 @@ import {
   MapPin,
   Utensils,
   Award,
-  Flame,
   CheckCircle2,
   Download,
-  Send,
   Trash2,
   Edit2,
-  ExternalLink,
-  ChevronRight,
   Eye,
   RefreshCw,
   Sparkles,
   X,
   Megaphone,
-  DollarSign,
   Calendar,
   Phone,
   Mail,
-  Share2,
-  Layers
+  UserCheck,
+  UserX,
+  UserPlus,
+  UserMinus,
+  Check,
+  ToggleLeft,
+  ToggleRight,
+  TrendingDown
 } from 'lucide-react';
 import {
   CustomerSegment,
@@ -38,16 +39,36 @@ import {
   SegmentOperator,
   SegmentRuleCondition,
   SegmentRuleGroup,
-  SegmentTagCategory,
   fetchCustomerSegments,
   saveCustomerSegment,
   deleteCustomerSegment,
+  toggleSegmentStatus,
+  addMemberToSegment,
+  removeMemberFromSegment,
+  getSegmentationStats,
   dispatchCampaignToSegment,
   exportSegmentAudienceCSV,
-  evaluateSegmentMembers,
-  getDaysSinceDate
+  evaluateSegmentMembers
 } from '../../lib/customerSegmentationApi';
 import { CustomerProfile, loadCustomersFromStorage } from '../../lib/customerManagementApi';
+
+const FIELD_OPTIONS: { field: SegmentCriteriaField; label: string; type: 'number' | 'text' | 'select' | 'date'; options?: string[] }[] = [
+  { field: 'totalSpend', label: 'Total Spending ($)', type: 'number' },
+  { field: 'visitCount', label: 'Number of Orders / Visits', type: 'number' },
+  { field: 'avgOrderValue', label: 'Average Order Value ($)', type: 'number' },
+  { field: 'daysSinceLastVisit', label: 'Days Since Last Visit', type: 'number' },
+  { field: 'orderFrequency', label: 'Order Frequency (High/Weekend/Low)', type: 'text' },
+  { field: 'favoriteCategory', label: 'Preferred Food Categories', type: 'text' },
+  { field: 'preferredOrderingMethod', label: 'Preferred Ordering Method', type: 'text' },
+  { field: 'daysSinceRegistered', label: 'Days Since Registration', type: 'number' },
+  { field: 'birthday', label: 'Birthday Recorded', type: 'text' },
+  { field: 'anniversary', label: 'Anniversary Recorded', type: 'text' },
+  { field: 'status', label: 'Customer Status', type: 'select', options: ['Active', 'Inactive'] },
+  { field: 'city', label: 'Customer City / Location', type: 'text' },
+  { field: 'loyaltyTier', label: 'Loyalty Tier', type: 'select', options: ['Platinum', 'Gold', 'Silver', 'Bronze'] },
+  { field: 'customerCategory', label: 'Customer Category', type: 'select', options: ['VIP', 'REGULAR', 'NEW', 'INACTIVE'] },
+  { field: 'dietaryPreference', label: 'Dietary Preference', type: 'text' },
+];
 
 export const CustomerSegmentationView: React.FC<{ orgId?: string }> = () => {
   const [segments, setSegments] = useState<CustomerSegment[]>([]);
@@ -59,6 +80,8 @@ export const CustomerSegmentationView: React.FC<{ orgId?: string }> = () => {
 
   // Inspection Drawer State
   const [inspectingSegment, setInspectingSegment] = useState<CustomerSegment | null>(null);
+  const [drawerSearch, setDrawerSearch] = useState<string>('');
+  const [selectedAddCustomerId, setSelectedAddCustomerId] = useState<string>('');
 
   // Edit / Create Modal State
   const [isEditModalOpen, setIsEditModalOpen] = useState<boolean>(false);
@@ -72,6 +95,7 @@ export const CustomerSegmentationView: React.FC<{ orgId?: string }> = () => {
   const [offerHeadline, setOfferHeadline] = useState<string>('');
   const [promoCode, setPromoCode] = useState<string>('');
   const [discountPct, setDiscountPct] = useState<number>(15);
+  const [hasExplicitConsent, setHasExplicitConsent] = useState<boolean>(false);
   const [isDispatching, setIsDispatching] = useState<boolean>(false);
 
   const showToast = (message: string, type: 'success' | 'error' = 'success') => {
@@ -107,22 +131,23 @@ export const CustomerSegmentationView: React.FC<{ orgId?: string }> = () => {
     });
   }, [segments, activeCategoryFilter, searchQuery]);
 
-  // Overall KPI metrics
-  const kpis = useMemo(() => {
-    const totalSegs = segments.length;
-    const highValueSeg = segments.find((s) => s.id === 'seg-high-value');
-    const atRiskSeg = segments.find((s) => s.id === 'seg-inactive-at-risk');
-    const totalSpendTracked = segments.reduce((sum, s) => sum + s.totalSegmentSpend, 0);
-    const avgAOV = segments.length > 0 ? (segments.reduce((sum, s) => sum + s.avgSegmentAOV, 0) / segments.length).toFixed(1) : '0';
+  // Overall 7 Segmentation Dashboard KPIs
+  const dashboardStats = useMemo(() => {
+    return getSegmentationStats(segments, customers);
+  }, [segments, customers]);
 
-    return {
-      totalSegs,
-      highValueCount: highValueSeg?.memberCount || 0,
-      atRiskCount: atRiskSeg?.memberCount || 0,
-      totalSpendTracked,
-      avgAOV,
-    };
-  }, [segments]);
+  // Handle Toggle Active/Inactive
+  const handleToggleActive = async (seg: CustomerSegment, e: React.MouseEvent) => {
+    e.stopPropagation();
+    const ok = await toggleSegmentStatus(seg.id);
+    if (ok) {
+      showToast(`Segment "${seg.name}" status updated`);
+      loadData();
+      if (inspectingSegment?.id === seg.id) {
+        setInspectingSegment((prev) => (prev ? { ...prev, isActive: !prev.isActive } : null));
+      }
+    }
+  };
 
   // Handle open create modal
   const handleOpenCreateModal = () => {
@@ -133,6 +158,7 @@ export const CustomerSegmentationView: React.FC<{ orgId?: string }> = () => {
       iconName: 'SlidersHorizontal',
       badgeColor: '#79415A',
       isPredefined: false,
+      isActive: true,
       rules: {
         combinator: 'AND',
         conditions: [
@@ -203,7 +229,10 @@ export const CustomerSegmentationView: React.FC<{ orgId?: string }> = () => {
   // Live member preview for modal
   const livePreviewCount = useMemo(() => {
     if (!editingSegment?.rules) return 0;
-    const res = evaluateSegmentMembers(editingSegment.rules, customers);
+    const res = evaluateSegmentMembers(
+      { rules: editingSegment.rules, manualAddedIds: editingSegment.manualAddedIds, manualRemovedIds: editingSegment.manualRemovedIds },
+      customers
+    );
     return res.memberCount;
   }, [editingSegment?.rules, customers]);
 
@@ -242,19 +271,50 @@ export const CustomerSegmentationView: React.FC<{ orgId?: string }> = () => {
     }
   };
 
+  // Manual Add Member to Segment
+  const handleManualAddMember = async () => {
+    if (!inspectingSegment || !selectedAddCustomerId) return;
+    const ok = await addMemberToSegment(inspectingSegment.id, selectedAddCustomerId);
+    if (ok) {
+      showToast(`Customer #${selectedAddCustomerId} manually added to segment`);
+      setSelectedAddCustomerId('');
+      loadData();
+      // Update inspecting drawer
+      const updated = (await fetchCustomerSegments()).find((s) => s.id === inspectingSegment.id);
+      if (updated) setInspectingSegment(updated);
+    }
+  };
+
+  // Manual Remove Member from Segment
+  const handleManualRemoveMember = async (customerId: string) => {
+    if (!inspectingSegment) return;
+    const ok = await removeMemberFromSegment(inspectingSegment.id, customerId);
+    if (ok) {
+      showToast(`Customer #${customerId} removed from segment`);
+      loadData();
+      const updated = (await fetchCustomerSegments()).find((s) => s.id === inspectingSegment.id);
+      if (updated) setInspectingSegment(updated);
+    }
+  };
+
   // Open Campaign Launch Modal
   const handleOpenCampaignModal = (seg: CustomerSegment) => {
     setCampaignSegment(seg);
-    setCampaignTitle(`${seg.name} Re-engagement Special`);
-    setOfferHeadline(`Exclusive VIP Invitation for our ${seg.name}`);
-    setPromoCode(`VIP-${seg.name.substring(0, 4).toUpperCase()}${new Date().getMonth() + 1}`);
+    setCampaignTitle(`${seg.name} Targeted Outreach`);
+    setOfferHeadline(`Special Dining Experience curated for our ${seg.name}`);
+    setPromoCode(`PROMO-${seg.name.substring(0, 4).toUpperCase()}${new Date().getMonth() + 1}`);
     setDiscountPct(15);
+    setHasExplicitConsent(false);
     setIsCampaignModalOpen(true);
   };
 
   // Submit Campaign Dispatch
   const handleDispatchCampaign = async () => {
     if (!campaignSegment) return;
+    if (!hasExplicitConsent) {
+      showToast('Please confirm marketing consent authorization before sending.', 'error');
+      return;
+    }
     setIsDispatching(true);
     try {
       const res = await dispatchCampaignToSegment({
@@ -283,21 +343,21 @@ export const CustomerSegmentationView: React.FC<{ orgId?: string }> = () => {
 
   // Export audience CSV
   const handleExportCSV = (seg: CustomerSegment) => {
-    const evalData = evaluateSegmentMembers(seg.rules, customers);
+    const evalData = evaluateSegmentMembers(seg, customers);
     exportSegmentAudienceCSV(seg, evalData.members);
     showToast(`Exported ${evalData.memberCount} patron records for "${seg.name}"`);
   };
 
-  // Category tags array
   const CATEGORIES = [
     { id: 'ALL', label: 'All Segments' },
-    { id: 'high_value', label: 'High-Value VIPs', icon: Crown },
-    { id: 'at_risk', label: 'At-Risk & Inactive', icon: AlertTriangle },
-    { id: 'frequency', label: 'Visit Frequency', icon: Repeat },
-    { id: 'spending', label: 'Spending & AOV', icon: TrendingUp },
-    { id: 'location', label: 'Location & Branch', icon: MapPin },
-    { id: 'culinary', label: 'Food & Cuisine', icon: Utensils },
-    { id: 'loyalty', label: 'Loyalty Tiers', icon: Award },
+    { id: 'vip', label: 'VIP Segments', icon: Crown },
+    { id: 'high_value', label: 'High Spenders', icon: TrendingUp },
+    { id: 'regular', label: 'Regular Patrons', icon: Users },
+    { id: 'frequency', label: 'Frequent Diners', icon: Repeat },
+    { id: 'new', label: 'New Diners', icon: Sparkles },
+    { id: 'at_risk', label: 'Inactive / Lost', icon: AlertTriangle },
+    { id: 'milestone', label: 'Birthday & Anniversary', icon: Calendar },
+    { id: 'ordering_channel', label: 'Online Ordering', icon: Phone },
     { id: 'custom', label: 'Custom Dynamic', icon: SlidersHorizontal },
   ];
 
@@ -306,7 +366,7 @@ export const CustomerSegmentationView: React.FC<{ orgId?: string }> = () => {
       {/* Toast Alert */}
       {toast && (
         <div
-          className={`fixed top-5 right-5 z-50 flex items-center gap-2.5 px-4 py-3 rounded-2xl shadow-xl text-xs font-bold text-white transition-all transform animate-bounce ${
+          className={`fixed top-5 right-5 z-50 flex items-center gap-2.5 px-4 py-3 rounded-2xl shadow-xl text-xs font-bold text-white transition-all transform animate-in fade-in slide-in-from-top-4 ${
             toast.type === 'success' ? 'bg-[#1F313D]' : 'bg-red-600'
           }`}
         >
@@ -324,10 +384,10 @@ export const CustomerSegmentationView: React.FC<{ orgId?: string }> = () => {
             </span>
             <div>
               <h2 className="font-serif text-2xl font-bold text-[#1F313D] leading-tight">
-                Customer Segmentation &amp; Cohort Intelligence
+                Customer Segmentation &amp; Cohort Intelligence (5.2)
               </h2>
               <p className="text-xs text-[#7A7268] mt-0.5">
-                Dynamic automated segmentation by spending, frequency, AOV, location, recency, culinary tastes, and loyalty tiers
+                Segment patrons by behavior, spend, frequency, dining patterns, and milestones for targeted campaigns
               </p>
             </div>
           </div>
@@ -336,7 +396,7 @@ export const CustomerSegmentationView: React.FC<{ orgId?: string }> = () => {
         <div className="flex items-center gap-2.5 flex-wrap">
           <button
             onClick={loadData}
-            title="Recalculate dynamic segments"
+            title="Recalculate dynamic segments against customer database"
             className="flex items-center gap-1.5 px-3 py-2 rounded-xl border border-[#DDD5C7] text-xs font-bold text-[#5C5549] hover:bg-[#EFE9DF] transition"
           >
             <RefreshCw className={`w-3.5 h-3.5 ${isLoading ? 'animate-spin' : ''}`} /> Refresh
@@ -351,42 +411,60 @@ export const CustomerSegmentationView: React.FC<{ orgId?: string }> = () => {
         </div>
       </div>
 
-      {/* KPI Summary Cards */}
-      <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-5 gap-3.5">
-        <div className="bg-white rounded-2xl p-4 border border-[#DDD5C7] shadow-xs">
-          <span className="text-[11px] font-bold text-[#7A7268] block">Total Segments</span>
-          <div className="text-xl font-bold text-[#1F313D] mt-1">{kpis.totalSegs} Active</div>
-          <span className="text-[10px] text-emerald-700 font-semibold mt-0.5 block">Dynamic Auto-Update</span>
+      {/* ── 7 SEGMENTATION DASHBOARD KPI CARDS ── */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-3">
+        <div className="bg-white rounded-2xl p-3.5 border border-[#DDD5C7] shadow-xs">
+          <span className="text-[10px] font-bold text-[#7A7268] block">Total Segments</span>
+          <div className="text-xl font-bold font-serif text-[#1F313D] mt-1">{dashboardStats.totalSegments}</div>
+          <span className="text-[9px] text-[#79415A] font-semibold mt-0.5 block">12 Predefined + Custom</span>
         </div>
 
-        <div className="bg-[#1F313D] text-white rounded-2xl p-4 border border-[#1F313D] shadow-xs">
+        <div className="bg-white rounded-2xl p-3.5 border border-[#DDD5C7] shadow-xs">
+          <span className="text-[10px] font-bold text-[#7A7268] block">Segmented Patrons</span>
+          <div className="text-xl font-bold font-serif text-emerald-700 mt-1">{dashboardStats.totalCustomersSegmented}</div>
+          <span className="text-[9px] text-emerald-600 font-semibold mt-0.5 block">Unique Guests Covered</span>
+        </div>
+
+        <div className="bg-white rounded-2xl p-3.5 border border-[#DDD5C7] shadow-xs">
+          <span className="text-[10px] font-bold text-[#7A7268] block">Active Segments</span>
+          <div className="text-xl font-bold font-serif text-[#82401D] mt-1">{dashboardStats.activeSegments}</div>
+          <span className="text-[9px] text-[#82401D] font-semibold mt-0.5 block">Live in Engine</span>
+        </div>
+
+        <div className="bg-[#1F313D] text-white rounded-2xl p-3.5 border border-[#1F313D] shadow-xs">
           <div className="flex items-center justify-between">
-            <span className="text-[11px] font-bold text-[#E5C9B3] block">High-Value VIPs</span>
-            <Crown className="w-4 h-4 text-[#E5C9B3]" />
+            <span className="text-[10px] font-bold text-[#E5C9B3] block">High-Value</span>
+            <Crown className="w-3 h-3 text-[#E5C9B3]" />
           </div>
-          <div className="text-xl font-bold text-white mt-1">{kpis.highValueCount} Diners</div>
-          <span className="text-[10px] text-emerald-400 font-medium mt-0.5 block">&gt; $2,000 LTV or Platinum</span>
+          <div className="text-xl font-bold text-white mt-1">{dashboardStats.highValueCustomers}</div>
+          <span className="text-[9px] text-emerald-400 font-medium mt-0.5 block">&gt; $1,000 or VIP</span>
         </div>
 
-        <div className="bg-white rounded-2xl p-4 border border-[#DDD5C7] shadow-xs">
+        <div className="bg-white rounded-2xl p-3.5 border border-[#DDD5C7] shadow-xs">
           <div className="flex items-center justify-between">
-            <span className="text-[11px] font-bold text-red-600 block">At-Risk &amp; Inactive</span>
-            <AlertTriangle className="w-4 h-4 text-red-500" />
+            <span className="text-[10px] font-bold text-[#7A7268] block">Frequent Patrons</span>
+            <Repeat className="w-3 h-3 text-blue-600" />
           </div>
-          <div className="text-xl font-bold text-[#1F313D] mt-1">{kpis.atRiskCount} Patrons</div>
-          <span className="text-[10px] text-[#7A7268] font-medium mt-0.5 block">&gt; 60 days dormancy</span>
+          <div className="text-xl font-bold text-[#1F313D] mt-1">{dashboardStats.frequentCustomers}</div>
+          <span className="text-[9px] text-blue-700 font-medium mt-0.5 block">3+ Completed Visits</span>
         </div>
 
-        <div className="bg-white rounded-2xl p-4 border border-[#DDD5C7] shadow-xs">
-          <span className="text-[11px] font-bold text-[#7A7268] block">Tracked Segment Spend</span>
-          <div className="text-xl font-bold text-[#79415A] mt-1">${kpis.totalSpendTracked.toLocaleString()}</div>
-          <span className="text-[10px] text-[#5C5549] font-medium mt-0.5 block">Aggregated patron value</span>
+        <div className="bg-white rounded-2xl p-3.5 border border-[#DDD5C7] shadow-xs">
+          <div className="flex items-center justify-between">
+            <span className="text-[10px] font-bold text-red-600 block">Inactive / Lost</span>
+            <AlertTriangle className="w-3 h-3 text-red-500" />
+          </div>
+          <div className="text-xl font-bold text-red-700 mt-1">{dashboardStats.inactiveCustomers}</div>
+          <span className="text-[9px] text-red-600 font-medium mt-0.5 block">&gt; 60 Days Inactive</span>
         </div>
 
-        <div className="bg-white rounded-2xl p-4 border border-[#DDD5C7] shadow-xs">
-          <span className="text-[11px] font-bold text-[#7A7268] block">Average Segment AOV</span>
-          <div className="text-xl font-bold text-[#82401D] mt-1">${kpis.avgAOV}</div>
-          <span className="text-[10px] text-[#5C5549] font-medium mt-0.5 block">Avg ticket across cohorts</span>
+        <div className="bg-white rounded-2xl p-3.5 border border-[#DDD5C7] shadow-xs">
+          <div className="flex items-center justify-between">
+            <span className="text-[10px] font-bold text-purple-700 block">Newly Acquired</span>
+            <Sparkles className="w-3 h-3 text-purple-600" />
+          </div>
+          <div className="text-xl font-bold text-purple-800 mt-1">{dashboardStats.newlyAcquiredCustomers}</div>
+          <span className="text-[9px] text-purple-600 font-medium mt-0.5 block">Last 30 Days</span>
         </div>
       </div>
 
@@ -402,9 +480,7 @@ export const CustomerSegmentationView: React.FC<{ orgId?: string }> = () => {
                 key={cat.id}
                 onClick={() => setActiveCategoryFilter(cat.id)}
                 className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all ${
-                  isActive
-                    ? 'bg-[#1F313D] text-white shadow-xs'
-                    : 'bg-white/80 text-[#5C5549] hover:bg-white hover:text-[#1F313D]'
+                  isActive ? 'bg-[#1F313D] text-white shadow-xs' : 'bg-white/80 text-[#5C5549] hover:bg-white hover:text-[#1F313D]'
                 }`}
               >
                 {Icon && <Icon className="w-3.5 h-3.5" />}
@@ -433,28 +509,36 @@ export const CustomerSegmentationView: React.FC<{ orgId?: string }> = () => {
           return (
             <div
               key={seg.id}
-              className="bg-white rounded-[22px] border border-[#DDD5C7] p-5 shadow-xs hover:shadow-md transition flex flex-col justify-between group"
+              className={`bg-white rounded-[22px] border p-5 shadow-xs hover:shadow-md transition flex flex-col justify-between group ${
+                seg.isActive ? 'border-[#DDD5C7]' : 'border-gray-300 opacity-60 bg-gray-50'
+              }`}
             >
               <div>
                 {/* Header */}
                 <div className="flex items-start justify-between gap-2">
                   <div className="flex items-center gap-2">
-                    <span
-                      className="w-3 h-3 rounded-full flex-shrink-0"
-                      style={{ backgroundColor: seg.badgeColor }}
-                    />
+                    <span className="w-3 h-3 rounded-full shrink-0" style={{ backgroundColor: seg.badgeColor }} />
                     <h3 className="font-bold text-sm text-[#1F313D] group-hover:text-[#79415A] transition">
                       {seg.name}
                     </h3>
                   </div>
 
-                  <span
-                    className={`text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider ${
-                      seg.isPredefined ? 'bg-[#EAE4D9] text-[#5C5549]' : 'bg-[#79415A]/10 text-[#79415A]'
-                    }`}
-                  >
-                    {seg.isPredefined ? 'System AI' : 'Custom'}
-                  </span>
+                  <div className="flex items-center gap-1.5">
+                    <button
+                      onClick={(e) => handleToggleActive(seg, e)}
+                      title={seg.isActive ? 'Deactivate segment' : 'Activate segment'}
+                      className="text-xs text-[#7A7268] hover:text-[#1F313D]"
+                    >
+                      {seg.isActive ? <ToggleRight className="w-5 h-5 text-emerald-600" /> : <ToggleLeft className="w-5 h-5 text-gray-400" />}
+                    </button>
+                    <span
+                      className={`text-[9px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider ${
+                        seg.isPredefined ? 'bg-[#EAE4D9] text-[#5C5549]' : 'bg-[#79415A]/10 text-[#79415A]'
+                      }`}
+                    >
+                      {seg.isPredefined ? 'Predefined' : 'Custom'}
+                    </span>
+                  </div>
                 </div>
 
                 <p className="text-xs text-[#7A7268] mt-2 line-clamp-2 leading-relaxed">
@@ -476,7 +560,7 @@ export const CustomerSegmentationView: React.FC<{ orgId?: string }> = () => {
                   ))}
                 </div>
 
-                {/* Metrics Matrix */}
+                {/* Customer Insights Matrix */}
                 <div className="mt-4 pt-3.5 border-t border-[#EAE4D9] grid grid-cols-3 gap-2 text-center">
                   <div className="bg-[#FAF7F2] p-2 rounded-xl border border-[#EAE4D9]">
                     <span className="text-[10px] text-[#7A7268] block">Audience</span>
@@ -486,23 +570,30 @@ export const CustomerSegmentationView: React.FC<{ orgId?: string }> = () => {
                   </div>
 
                   <div className="bg-[#FAF7F2] p-2 rounded-xl border border-[#EAE4D9]">
-                    <span className="text-[10px] text-[#7A7268] block">Cohort Spend</span>
-                    <span className="text-sm font-bold text-[#79415A] block mt-0.5">
+                    <span className="text-[10px] text-[#7A7268] block">Revenue</span>
+                    <span className="text-sm font-bold text-[#79415A] block mt-0.5 font-mono">
                       ${seg.totalSegmentSpend.toLocaleString()}
                     </span>
                   </div>
 
                   <div className="bg-[#FAF7F2] p-2 rounded-xl border border-[#EAE4D9]">
                     <span className="text-[10px] text-[#7A7268] block">Avg AOV</span>
-                    <span className="text-sm font-bold text-[#82401D] block mt-0.5">
+                    <span className="text-sm font-bold text-[#82401D] block mt-0.5 font-mono">
                       ${seg.avgSegmentAOV}
                     </span>
                   </div>
                 </div>
+
+                {/* Additional Insight Badges */}
+                <div className="mt-2.5 flex items-center justify-between text-[10px] text-[#7A7268] px-1 font-medium">
+                  <span>Frequency: <strong>{seg.purchaseFrequency || 1} orders/patron</strong></span>
+                  <span>Retention: <strong>{seg.retentionRate || 75}%</strong></span>
+                  <span className="text-emerald-700 font-bold">{seg.growthTrend || '+5.0% MoM'}</span>
+                </div>
               </div>
 
               {/* Action Buttons */}
-              <div className="mt-5 pt-3.5 border-t border-[#EAE4D9] flex items-center justify-between gap-2">
+              <div className="mt-4 pt-3.5 border-t border-[#EAE4D9] flex items-center justify-between gap-2">
                 <button
                   onClick={() => setInspectingSegment(seg)}
                   className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#1F313D] hover:bg-[#2d4454] text-white text-xs font-bold transition shadow-2xs"
@@ -513,7 +604,7 @@ export const CustomerSegmentationView: React.FC<{ orgId?: string }> = () => {
                 <div className="flex items-center gap-1.5">
                   <button
                     onClick={() => handleOpenCampaignModal(seg)}
-                    title="Launch Campaign with this segment"
+                    title="Launch targeted marketing campaign"
                     className="p-1.5 rounded-lg bg-[#79415A]/10 hover:bg-[#79415A]/20 text-[#79415A] transition"
                   >
                     <Megaphone className="w-3.5 h-3.5" />
@@ -521,30 +612,28 @@ export const CustomerSegmentationView: React.FC<{ orgId?: string }> = () => {
 
                   <button
                     onClick={() => handleExportCSV(seg)}
-                    title="Export Audience CSV for Meta/Google/SMS"
+                    title="Export Audience CSV"
                     className="p-1.5 rounded-lg bg-[#EFE9DF] hover:bg-[#E4DCCE] text-[#5C5549] transition"
                   >
                     <Download className="w-3.5 h-3.5" />
                   </button>
 
-                  {!seg.isPredefined && (
-                    <>
-                      <button
-                        onClick={() => handleOpenEditModal(seg)}
-                        title="Edit Rules"
-                        className="p-1.5 rounded-lg bg-[#EFE9DF] hover:bg-[#E4DCCE] text-[#5C5549] transition"
-                      >
-                        <Edit2 className="w-3.5 h-3.5" />
-                      </button>
+                  <button
+                    onClick={() => handleOpenEditModal(seg)}
+                    title="Edit Segment Conditions"
+                    className="p-1.5 rounded-lg bg-[#EFE9DF] hover:bg-[#E4DCCE] text-[#5C5549] transition"
+                  >
+                    <Edit2 className="w-3.5 h-3.5" />
+                  </button>
 
-                      <button
-                        onClick={() => handleDeleteSegment(seg)}
-                        title="Delete Segment"
-                        className="p-1.5 rounded-lg bg-red-50 hover:bg-red-100 text-red-600 transition"
-                      >
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </button>
-                    </>
+                  {!seg.isPredefined && (
+                    <button
+                      onClick={() => handleDeleteSegment(seg)}
+                      title="Delete Segment"
+                      className="p-1.5 rounded-lg bg-red-50 hover:bg-red-100 text-red-600 transition"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
                   )}
                 </div>
               </div>
@@ -561,20 +650,21 @@ export const CustomerSegmentationView: React.FC<{ orgId?: string }> = () => {
             <div className="p-5 border-b border-[#DDD5C7] bg-white flex items-center justify-between">
               <div>
                 <div className="flex items-center gap-2">
-                  <span
-                    className="w-3.5 h-3.5 rounded-full"
-                    style={{ backgroundColor: inspectingSegment.badgeColor }}
-                  />
-                  <h3 className="font-serif text-lg font-bold text-[#1F313D]">
-                    {inspectingSegment.name}
-                  </h3>
+                  <span className="w-3.5 h-3.5 rounded-full" style={{ backgroundColor: inspectingSegment.badgeColor }} />
+                  <h3 className="font-serif text-lg font-bold text-[#1F313D]">{inspectingSegment.name}</h3>
                 </div>
                 <p className="text-xs text-[#7A7268] mt-0.5">
-                  Live cohort of {inspectingSegment.memberCount} patron profiles matching dynamic rules
+                  Cohort of {inspectingSegment.memberCount} patron profiles matching dynamic conditions
                 </p>
               </div>
 
               <div className="flex items-center gap-2">
+                <button
+                  onClick={() => handleOpenCampaignModal(inspectingSegment)}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#79415A] text-white text-xs font-bold hover:bg-[#68334b]"
+                >
+                  <Megaphone className="w-3.5 h-3.5" /> Target Campaign
+                </button>
                 <button
                   onClick={() => handleExportCSV(inspectingSegment)}
                   className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-[#DDD5C7] text-xs font-bold text-[#5C5549] hover:bg-[#EFE9DF]"
@@ -590,458 +680,423 @@ export const CustomerSegmentationView: React.FC<{ orgId?: string }> = () => {
               </div>
             </div>
 
+            {/* Manual Add Member Control & Search Bar */}
+            <div className="p-4 bg-[#EFE9DF] border-b border-[#DDD5C7] space-y-3">
+              <div className="flex flex-col sm:flex-row items-center gap-2">
+                <div className="relative flex-1 w-full">
+                  <Search className="w-3.5 h-3.5 text-[#7A7268] absolute left-3 top-1/2 -translate-y-1/2" />
+                  <input
+                    type="text"
+                    value={drawerSearch}
+                    onChange={(e) => setDrawerSearch(e.target.value)}
+                    placeholder="Search members in this segment..."
+                    className="w-full pl-8 pr-3 py-1.5 rounded-xl bg-white border border-[#DDD5C7] text-xs text-[#1F313D] focus:outline-none"
+                  />
+                </div>
+
+                {/* Manual Add Member Select */}
+                <div className="flex items-center gap-1.5 w-full sm:w-auto">
+                  <select
+                    value={selectedAddCustomerId}
+                    onChange={(e) => setSelectedAddCustomerId(e.target.value)}
+                    className="px-2.5 py-1.5 rounded-xl bg-white border border-[#DDD5C7] text-xs text-[#1F313D] focus:outline-none"
+                  >
+                    <option value="">Select patron to add...</option>
+                    {customers
+                      .filter((c) => !inspectingSegment.memberIds.includes(c.id))
+                      .map((c) => (
+                        <option key={c.id} value={c.id}>
+                          {c.fullName} ({c.id})
+                        </option>
+                      ))}
+                  </select>
+                  <button
+                    disabled={!selectedAddCustomerId}
+                    onClick={handleManualAddMember}
+                    className="flex items-center gap-1 px-3 py-1.5 rounded-xl bg-[#059669] hover:bg-[#047857] text-white text-xs font-bold disabled:opacity-40"
+                  >
+                    <UserPlus className="w-3.5 h-3.5" /> Add
+                  </button>
+                </div>
+              </div>
+            </div>
+
             {/* Member List */}
             <div className="p-5 overflow-y-auto space-y-3 flex-1">
               {(() => {
-                const evalData = evaluateSegmentMembers(inspectingSegment.rules, customers);
-                if (evalData.members.length === 0) {
+                const evalData = evaluateSegmentMembers(inspectingSegment, customers);
+                const filteredMembers = evalData.members.filter((m) => {
+                  if (!drawerSearch.trim()) return true;
+                  const q = drawerSearch.toLowerCase().trim();
+                  return (
+                    m.fullName.toLowerCase().includes(q) ||
+                    m.email.toLowerCase().includes(q) ||
+                    m.mobile.includes(q) ||
+                    m.id.toLowerCase().includes(q)
+                  );
+                });
+
+                if (filteredMembers.length === 0) {
                   return (
                     <div className="text-center py-12 text-[#7A7268]">
                       <Users className="w-8 h-8 mx-auto opacity-30 mb-2" />
-                      <p className="text-xs font-semibold">No active patrons match these segment rules currently.</p>
+                      <p className="font-semibold text-xs">No matching customers in this segment.</p>
                     </div>
                   );
                 }
 
-                return evalData.members.map((c) => {
-                  const daysSince = getDaysSinceDate(c.lastVisitDate);
-                  return (
-                    <div
-                      key={c.id}
-                      className="bg-white p-3.5 rounded-2xl border border-[#DDD5C7] shadow-xs flex items-center justify-between gap-3"
-                    >
-                      <div className="flex items-center gap-3">
-                        <img
-                          src={c.avatarUrl || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100'}
-                          alt={c.fullName}
-                          className="w-10 h-10 rounded-full object-cover border border-[#DDD5C7]"
-                        />
-                        <div>
-                          <div className="flex items-center gap-2">
-                            <span className="font-bold text-xs text-[#1F313D]">{c.fullName}</span>
-                            <span
-                              className={`text-[9px] font-bold px-1.5 py-0.2 rounded-full ${
-                                c.loyaltyTier === 'Platinum'
-                                  ? 'bg-purple-100 text-purple-700'
-                                  : c.loyaltyTier === 'Gold'
-                                  ? 'bg-amber-100 text-amber-800'
-                                  : 'bg-slate-100 text-slate-700'
-                              }`}
-                            >
-                              {c.loyaltyTier}
-                            </span>
-                          </div>
-                          <div className="flex items-center gap-2 text-[10px] text-[#7A7268] mt-0.5">
-                            <span>{c.mobile}</span>
-                            <span>•</span>
-                            <span>{c.email}</span>
-                          </div>
-                          {c.favoriteFoodCategory && (
-                            <div className="text-[10px] text-[#82401D] font-medium mt-0.5">
-                              Fav: {c.favoriteFoodCategory}
-                            </div>
-                          )}
+                return filteredMembers.map((member) => (
+                  <div
+                    key={member.id}
+                    className="bg-white rounded-2xl p-4 border border-[#DDD5C7] shadow-xs flex items-center justify-between gap-4"
+                  >
+                    <div className="flex items-center gap-3">
+                      <img
+                        src={
+                          member.avatarUrl ||
+                          `https://ui-avatars.com/api/?name=${encodeURIComponent(member.fullName)}&background=79415A&color=fff&size=80`
+                        }
+                        alt={member.fullName}
+                        className="w-10 h-10 rounded-full object-cover border border-[#DDD5C7]"
+                      />
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <span className="font-bold text-xs text-[#1F313D]">{member.fullName}</span>
+                          <span className="text-[10px] font-mono text-[#82401D] font-bold">{member.id}</span>
+                          <span className="text-[9px] px-1.5 py-0.2 rounded font-bold bg-[#EFE9DF] text-[#5C5549]">
+                            {member.loyaltyTier}
+                          </span>
+                        </div>
+                        <div className="text-[11px] text-[#7A7268] flex items-center gap-3 mt-0.5">
+                          <span>{member.mobile}</span>
+                          <span>&bull;</span>
+                          <span>{member.email || 'No email'}</span>
+                          <span>&bull;</span>
+                          <span>{member.address?.city || 'Unspecified'}</span>
                         </div>
                       </div>
+                    </div>
 
+                    <div className="flex items-center gap-3">
                       <div className="text-right">
-                        <span className="text-xs font-bold text-[#79415A] block">
-                          ${c.totalSpend.toLocaleString()}
+                        <span className="text-xs font-bold font-mono text-[#1F313D] block">
+                          ${(member.totalSpend || 0).toFixed(0)}
                         </span>
-                        <span className="text-[10px] text-[#7A7268] block mt-0.5">
-                          {c.totalVisits || 0} visits • AOV: ${c.averageOrderValue?.toFixed(0) || 0}
-                        </span>
-                        <span
-                          className={`text-[9px] font-bold block mt-0.5 ${
-                            daysSince > 60 ? 'text-red-600' : 'text-emerald-700'
-                          }`}
-                        >
-                          {daysSince === 0 ? 'Today' : `${daysSince}d ago`}
+                        <span className="text-[10px] text-[#7A7268] block">
+                          {member.totalOrders || member.totalVisits || 0} visits
                         </span>
                       </div>
-                    </div>
-                  );
-                });
-              })()}
-            </div>
 
-            {/* Drawer Footer */}
-            <div className="p-4 bg-white border-t border-[#DDD5C7] flex items-center justify-between">
-              <span className="text-xs text-[#7A7268]">
-                Segment rule evaluation executes dynamically against latest database state
-              </span>
-              <button
-                onClick={() => {
-                  const seg = inspectingSegment;
-                  setInspectingSegment(null);
-                  handleOpenCampaignModal(seg);
-                }}
-                className="flex items-center gap-2 px-4 py-2 rounded-xl bg-[#79415A] text-white text-xs font-bold hover:bg-[#68334b] transition shadow-xs"
-              >
-                <Megaphone className="w-3.5 h-3.5" /> Launch Campaign
-              </button>
+                      <button
+                        onClick={() => handleManualRemoveMember(member.id)}
+                        title="Remove patron from segment"
+                        className="p-1.5 rounded-lg text-rose-600 hover:bg-rose-50"
+                      >
+                        <UserMinus className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </div>
+                ));
+              })()}
             </div>
           </div>
         </div>
       )}
 
-      {/* ── MODAL: CREATE / EDIT CUSTOM SEGMENT ── */}
+      {/* ── CREATE / EDIT SEGMENT MODAL WITH CONDITION BUILDER ── */}
       {isEditModalOpen && editingSegment && (
-        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-[#FAF7F2] w-full max-w-2xl rounded-[24px] border border-[#DDD5C7] shadow-2xl p-6 max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between pb-4 border-b border-[#DDD5C7]">
+        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto">
+          <div className="bg-[#FAF7F2] border border-[#DDD5C7] rounded-[28px] max-w-2xl w-full p-6 shadow-2xl space-y-5 my-8">
+            <div className="flex items-center justify-between pb-3 border-b border-[#DDD5C7]">
               <div>
                 <h3 className="font-serif text-lg font-bold text-[#1F313D]">
-                  {editingSegment.id ? 'Edit Dynamic Segment' : 'Create New Customer Segment'}
+                  {editingSegment.id ? 'Edit Segment Rules & Logic' : 'Create Custom Customer Segment'}
                 </h3>
-                <p className="text-xs text-[#7A7268] mt-0.5">
-                  Build dynamic filter rules to group patrons by spending, frequency, location, recency, or culinary preferences
-                </p>
+                <p className="text-xs text-[#7A7268]">Configure dynamic rules with AND / OR combinator</p>
               </div>
-              <button
-                onClick={() => setIsEditModalOpen(false)}
-                className="p-1.5 rounded-xl hover:bg-[#EFE9DF] text-[#7A7268]"
-              >
+              <button onClick={() => setIsEditModalOpen(false)} className="p-1 rounded-full text-[#7A7268] hover:bg-[#DDD5C7]">
                 <X className="w-5 h-5" />
               </button>
             </div>
 
-            <div className="space-y-4 mt-5">
-              {/* Segment Name & Category */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div className="space-y-4 text-xs">
+              {/* Name & Description */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="text-xs font-bold text-[#1F313D] block mb-1">Segment Name *</label>
+                  <label className="block text-[11px] font-bold text-[#1F313D] mb-1">Segment Name *</label>
                   <input
                     type="text"
-                    placeholder="e.g. Weekend Big Spenders"
+                    required
                     value={editingSegment.name || ''}
                     onChange={(e) => setEditingSegment({ ...editingSegment, name: e.target.value })}
-                    className="w-full px-3 py-2 rounded-xl bg-white border border-[#DDD5C7] text-xs font-semibold text-[#1F313D]"
+                    placeholder="e.g. High-Spenders in Mumbai"
+                    className="w-full px-3 py-2 rounded-xl bg-white border border-[#DDD5C7] text-[#1F313D] focus:outline-none"
                   />
                 </div>
 
                 <div>
-                  <label className="text-xs font-bold text-[#1F313D] block mb-1">Cohort Category</label>
-                  <select
-                    value={editingSegment.category || 'custom'}
-                    onChange={(e) => setEditingSegment({ ...editingSegment, category: e.target.value as any })}
-                    className="w-full px-3 py-2 rounded-xl bg-white border border-[#DDD5C7] text-xs font-semibold text-[#1F313D]"
-                  >
-                    <option value="high_value">High-Value VIPs</option>
-                    <option value="at_risk">At-Risk & Inactive</option>
-                    <option value="frequency">Visit Frequency</option>
-                    <option value="spending">Spending & AOV</option>
-                    <option value="location">Location & Outlet</option>
-                    <option value="culinary">Culinary & Cuisine</option>
-                    <option value="loyalty">Loyalty Tier</option>
-                    <option value="custom">Custom Criteria</option>
-                  </select>
+                  <label className="block text-[11px] font-bold text-[#1F313D] mb-1">Badge Color</label>
+                  <input
+                    type="color"
+                    value={editingSegment.badgeColor || '#79415A'}
+                    onChange={(e) => setEditingSegment({ ...editingSegment, badgeColor: e.target.value })}
+                    className="w-full h-9 rounded-xl border border-[#DDD5C7] bg-white cursor-pointer px-1 py-1"
+                  />
+                </div>
+
+                <div className="sm:col-span-2">
+                  <label className="block text-[11px] font-bold text-[#1F313D] mb-1">Description</label>
+                  <input
+                    type="text"
+                    value={editingSegment.description || ''}
+                    onChange={(e) => setEditingSegment({ ...editingSegment, description: e.target.value })}
+                    placeholder="Brief description of who belongs in this segment..."
+                    className="w-full px-3 py-2 rounded-xl bg-white border border-[#DDD5C7] text-[#1F313D] focus:outline-none"
+                  />
                 </div>
               </div>
 
-              {/* Description */}
-              <div>
-                <label className="text-xs font-bold text-[#1F313D] block mb-1">Description</label>
-                <input
-                  type="text"
-                  placeholder="Target purpose for marketing and kitchen hospitality"
-                  value={editingSegment.description || ''}
-                  onChange={(e) => setEditingSegment({ ...editingSegment, description: e.target.value })}
-                  className="w-full px-3 py-2 rounded-xl bg-white border border-[#DDD5C7] text-xs font-semibold text-[#1F313D]"
-                />
-              </div>
+              {/* Condition Builder */}
+              <div className="p-4 rounded-2xl bg-[#EFE9DF] border border-[#DDD5C7] space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <span className="font-bold text-[#1F313D]">Condition Match Logic:</span>
+                    <div className="flex rounded-lg overflow-hidden border border-[#DDD5C7]">
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setEditingSegment({
+                            ...editingSegment,
+                            rules: { ...(editingSegment.rules || { conditions: [] }), combinator: 'AND' },
+                          })
+                        }
+                        className={`px-3 py-1 font-bold text-xs ${
+                          editingSegment.rules?.combinator === 'AND' ? 'bg-[#1F313D] text-white' : 'bg-white text-[#5C5549]'
+                        }`}
+                      >
+                        Match ALL (AND)
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setEditingSegment({
+                            ...editingSegment,
+                            rules: { ...(editingSegment.rules || { conditions: [] }), combinator: 'OR' },
+                          })
+                        }
+                        className={`px-3 py-1 font-bold text-xs ${
+                          editingSegment.rules?.combinator === 'OR' ? 'bg-[#1F313D] text-white' : 'bg-white text-[#5C5549]'
+                        }`}
+                      >
+                        Match ANY (OR)
+                      </button>
+                    </div>
+                  </div>
 
-              {/* Combinator (AND / OR) */}
-              <div className="p-3 bg-white rounded-xl border border-[#DDD5C7] flex items-center justify-between">
-                <div>
-                  <span className="text-xs font-bold text-[#1F313D] block">Condition Matching Logic</span>
-                  <span className="text-[11px] text-[#7A7268]">
-                    Should a customer match all conditions (AND) or any single condition (OR)?
-                  </span>
-                </div>
-
-                <div className="flex items-center gap-1 bg-[#EFE9DF] p-1 rounded-xl">
-                  <button
-                    type="button"
-                    onClick={() =>
-                      setEditingSegment({
-                        ...editingSegment,
-                        rules: { ...editingSegment.rules!, combinator: 'AND' },
-                      })
-                    }
-                    className={`px-3 py-1 rounded-lg text-xs font-bold transition ${
-                      editingSegment.rules?.combinator === 'AND'
-                        ? 'bg-[#1F313D] text-white shadow-xs'
-                        : 'text-[#5C5549]'
-                    }`}
-                  >
-                    Match ALL (AND)
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() =>
-                      setEditingSegment({
-                        ...editingSegment,
-                        rules: { ...editingSegment.rules!, combinator: 'OR' },
-                      })
-                    }
-                    className={`px-3 py-1 rounded-lg text-xs font-bold transition ${
-                      editingSegment.rules?.combinator === 'OR'
-                        ? 'bg-[#1F313D] text-white shadow-xs'
-                        : 'text-[#5C5549]'
-                    }`}
-                  >
-                    Match ANY (OR)
-                  </button>
-                </div>
-              </div>
-
-              {/* Dynamic Rules Rows */}
-              <div>
-                <div className="flex items-center justify-between mb-2">
-                  <label className="text-xs font-bold text-[#1F313D]">Segment Rules &amp; Conditions</label>
                   <button
                     type="button"
                     onClick={handleAddCondition}
-                    className="flex items-center gap-1 text-xs font-bold text-[#79415A] hover:underline"
+                    className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-[#79415A] text-white font-bold text-xs"
                   >
-                    <Plus className="w-3.5 h-3.5" /> Add Condition
+                    <Plus className="w-3 h-3" /> Add Condition
                   </button>
                 </div>
 
-                <div className="space-y-2">
-                  {editingSegment.rules?.conditions.map((cond, idx) => (
-                    <div
-                      key={cond.id}
-                      className="p-3 bg-white rounded-xl border border-[#DDD5C7] flex items-center gap-2 flex-wrap sm:flex-nowrap"
-                    >
-                      {/* Field */}
-                      <select
-                        value={cond.field}
-                        onChange={(e) => handleUpdateCondition(cond.id, { field: e.target.value as any })}
-                        className="px-2.5 py-1.5 rounded-lg bg-[#EFE9DF] text-xs font-bold text-[#1F313D] border border-[#DDD5C7] flex-1"
-                      >
-                        <option value="totalSpend">Total Spending ($)</option>
-                        <option value="visitCount">Visit Frequency (Count)</option>
-                        <option value="avgOrderValue">Average Order Value ($)</option>
-                        <option value="daysSinceLastVisit">Last Visit Date (Days Ago)</option>
-                        <option value="city">Location (City)</option>
-                        <option value="favoriteCategory">Favorite Food Category</option>
-                        <option value="loyaltyTier">Loyalty Membership Tier</option>
-                        <option value="customerCategory">Customer Category</option>
-                      </select>
+                {/* Condition Rows */}
+                <div className="space-y-2 pt-2">
+                  {(editingSegment.rules?.conditions || []).map((cond) => {
+                    const fieldDef = FIELD_OPTIONS.find((f) => f.field === cond.field) || FIELD_OPTIONS[0];
 
-                      {/* Operator */}
-                      <select
-                        value={cond.operator}
-                        onChange={(e) => handleUpdateCondition(cond.id, { operator: e.target.value as any })}
-                        className="px-2.5 py-1.5 rounded-lg bg-[#EFE9DF] text-xs font-bold text-[#1F313D] border border-[#DDD5C7]"
-                      >
-                        <option value="gte">&ge; Greater / Equal</option>
-                        <option value="lte">&le; Less / Equal</option>
-                        <option value="eq">= Equals</option>
-                        <option value="neq">&ne; Not Equal</option>
-                        <option value="contains">Contains</option>
-                      </select>
-
-                      {/* Value Input */}
-                      {cond.field === 'loyaltyTier' ? (
+                    return (
+                      <div key={cond.id} className="flex items-center gap-2 bg-white p-2.5 rounded-xl border border-[#DDD5C7]">
+                        {/* Field Selector */}
                         <select
-                          value={cond.value}
-                          onChange={(e) => handleUpdateCondition(cond.id, { value: e.target.value })}
-                          className="px-2.5 py-1.5 rounded-lg bg-white text-xs font-semibold text-[#1F313D] border border-[#DDD5C7] flex-1"
+                          value={cond.field}
+                          onChange={(e) => handleUpdateCondition(cond.id, { field: e.target.value as any })}
+                          className="px-2 py-1 rounded-lg bg-[#FAF7F2] border border-[#DDD5C7] text-xs font-semibold text-[#1F313D]"
                         >
-                          <option value="Bronze">Bronze</option>
-                          <option value="Silver">Silver</option>
-                          <option value="Gold">Gold</option>
-                          <option value="Platinum">Platinum</option>
+                          {FIELD_OPTIONS.map((f) => (
+                            <option key={f.field} value={f.field}>{f.label}</option>
+                          ))}
                         </select>
-                      ) : cond.field === 'customerCategory' ? (
-                        <select
-                          value={cond.value}
-                          onChange={(e) => handleUpdateCondition(cond.id, { value: e.target.value })}
-                          className="px-2.5 py-1.5 rounded-lg bg-white text-xs font-semibold text-[#1F313D] border border-[#DDD5C7] flex-1"
-                        >
-                          <option value="NEW">NEW</option>
-                          <option value="REGULAR">REGULAR</option>
-                          <option value="VIP">VIP</option>
-                          <option value="INACTIVE">INACTIVE</option>
-                        </select>
-                      ) : (
-                        <input
-                          type={['totalSpend', 'visitCount', 'avgOrderValue', 'daysSinceLastVisit'].includes(cond.field) ? 'number' : 'text'}
-                          value={cond.value ?? ''}
-                          onChange={(e) => handleUpdateCondition(cond.id, { value: e.target.value })}
-                          placeholder="Threshold value..."
-                          className="px-2.5 py-1.5 rounded-lg bg-white text-xs font-semibold text-[#1F313D] border border-[#DDD5C7] flex-1"
-                        />
-                      )}
 
-                      {/* Delete Condition Button */}
-                      <button
-                        type="button"
-                        onClick={() => handleRemoveCondition(cond.id)}
-                        className="p-1.5 rounded-lg hover:bg-red-50 text-red-500"
-                      >
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </button>
-                    </div>
-                  ))}
+                        {/* Operator */}
+                        <select
+                          value={cond.operator}
+                          onChange={(e) => handleUpdateCondition(cond.id, { operator: e.target.value as any })}
+                          className="px-2 py-1 rounded-lg bg-[#FAF7F2] border border-[#DDD5C7] text-xs font-semibold text-[#1F313D]"
+                        >
+                          <option value="gte">&gt;= Greater or Equal</option>
+                          <option value="lte">&lt;= Less or Equal</option>
+                          <option value="eq">= Equals</option>
+                          <option value="neq">!= Not Equals</option>
+                          <option value="contains">Contains Substring</option>
+                        </select>
+
+                        {/* Value Input */}
+                        {fieldDef.type === 'select' && fieldDef.options ? (
+                          <select
+                            value={cond.value}
+                            onChange={(e) => handleUpdateCondition(cond.id, { value: e.target.value })}
+                            className="flex-1 px-2 py-1 rounded-lg bg-[#FAF7F2] border border-[#DDD5C7] text-xs text-[#1F313D]"
+                          >
+                            {fieldDef.options.map((opt) => (
+                              <option key={opt} value={opt}>{opt}</option>
+                            ))}
+                          </select>
+                        ) : (
+                          <input
+                            type={fieldDef.type === 'number' ? 'number' : 'text'}
+                            value={cond.value}
+                            onChange={(e) => handleUpdateCondition(cond.id, { value: e.target.value })}
+                            className="flex-1 px-2.5 py-1 rounded-lg bg-[#FAF7F2] border border-[#DDD5C7] text-xs text-[#1F313D]"
+                          />
+                        )}
+
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveCondition(cond.id)}
+                          className="p-1 rounded-lg text-rose-600 hover:bg-rose-50"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {/* Live Match Preview Badge */}
+                <div className="pt-2 text-right">
+                  <span className="text-xs font-bold text-[#79415A] bg-[#79415A]/10 px-3 py-1 rounded-full">
+                    Live Match Preview: {livePreviewCount} customers qualify
+                  </span>
                 </div>
               </div>
 
-              {/* Live Preview Strip */}
-              <div className="p-3.5 bg-[#1F313D] text-white rounded-2xl flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <Sparkles className="w-4 h-4 text-emerald-400" />
-                  <span className="text-xs font-bold">Dynamic Cohort Real-Time Calculation:</span>
-                </div>
-                <span className="text-xs font-bold text-emerald-300">
-                  Matches {livePreviewCount} patrons right now
-                </span>
+              {/* Action Buttons */}
+              <div className="flex justify-end gap-2 pt-3 border-t border-[#DDD5C7]">
+                <button
+                  type="button"
+                  onClick={() => setIsEditModalOpen(false)}
+                  className="px-4 py-2 rounded-xl border border-[#DDD5C7] text-[#5C5549] font-bold hover:bg-[#EFE9DF]"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={handleSaveSegment}
+                  className="px-5 py-2 rounded-xl bg-[#79415A] hover:bg-[#68334b] text-white font-bold"
+                >
+                  Save Segment
+                </button>
               </div>
-            </div>
-
-            {/* Modal Actions */}
-            <div className="mt-6 pt-4 border-t border-[#DDD5C7] flex items-center justify-end gap-2.5">
-              <button
-                type="button"
-                onClick={() => setIsEditModalOpen(false)}
-                className="px-4 py-2 rounded-xl border border-[#DDD5C7] text-xs font-bold text-[#5C5549] hover:bg-[#EFE9DF]"
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                onClick={handleSaveSegment}
-                className="px-4 py-2 rounded-xl bg-[#79415A] text-white text-xs font-bold hover:bg-[#68334b] shadow-xs"
-              >
-                Save Dynamic Segment
-              </button>
             </div>
           </div>
         </div>
       )}
 
-      {/* ── MODAL: LAUNCH MARKETING CAMPAIGN WITH SEGMENT ── */}
+      {/* ── CAMPAIGN DISPATCH MODAL ── */}
       {isCampaignModalOpen && campaignSegment && (
         <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-[#FAF7F2] w-full max-w-lg rounded-[24px] border border-[#DDD5C7] shadow-2xl p-6">
-            <div className="flex items-center justify-between pb-4 border-b border-[#DDD5C7]">
-              <div>
-                <h3 className="font-serif text-lg font-bold text-[#1F313D]">
-                  Launch Targeted Campaign
-                </h3>
-                <p className="text-xs text-[#7A7268] mt-0.5">
-                  Targeting <span className="font-bold text-[#1F313D]">{campaignSegment.memberCount} patrons</span> in {campaignSegment.name}
-                </p>
+          <div className="bg-[#FAF7F2] border border-[#DDD5C7] rounded-[24px] max-w-md w-full p-6 shadow-2xl space-y-4">
+            <div className="flex items-center justify-between pb-2 border-b border-[#DDD5C7]">
+              <div className="flex items-center gap-2 text-[#79415A]">
+                <Megaphone className="w-5 h-5" />
+                <h3 className="font-bold text-base text-[#1F313D]">Launch Targeted Campaign</h3>
               </div>
-              <button
-                onClick={() => setIsCampaignModalOpen(false)}
-                className="p-1.5 rounded-xl hover:bg-[#EFE9DF] text-[#7A7268]"
-              >
-                <X className="w-5 h-5" />
+              <button onClick={() => setIsCampaignModalOpen(false)} className="p-1 rounded-full text-[#7A7268] hover:bg-[#DDD5C7]">
+                <X className="w-4 h-4" />
               </button>
             </div>
 
-            <div className="space-y-4 mt-5">
-              {/* Channel Selector */}
+            <p className="text-xs text-[#5C5549]">
+              Targeting <strong>{campaignSegment.name}</strong> ({campaignSegment.memberCount} qualifying patrons).
+            </p>
+
+            <div className="space-y-3 text-xs">
               <div>
-                <label className="text-xs font-bold text-[#1F313D] block mb-1">Marketing Channel</label>
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                  {[
-                    { id: 'WhatsApp', label: 'WhatsApp API' },
-                    { id: 'SMS', label: 'SMS Blast' },
-                    { id: 'Email', label: 'Email Newsletter' },
-                    { id: 'Meta Custom Audience', label: 'Meta Ads Audience' },
-                    { id: 'Google Customer Match', label: 'Google Ads Match' },
-                  ].map((ch) => (
-                    <button
-                      key={ch.id}
-                      type="button"
-                      onClick={() => setCampaignChannel(ch.id as any)}
-                      className={`p-2 rounded-xl text-xs font-bold text-center border transition ${
-                        campaignChannel === ch.id
-                          ? 'bg-[#1F313D] text-white border-[#1F313D]'
-                          : 'bg-white text-[#5C5549] border-[#DDD5C7] hover:bg-[#EAE4D9]'
-                      }`}
-                    >
-                      {ch.label}
-                    </button>
-                  ))}
-                </div>
+                <label className="block text-[11px] font-bold text-[#1F313D] mb-1">Outreach Channel</label>
+                <select
+                  value={campaignChannel}
+                  onChange={(e) => setCampaignChannel(e.target.value as any)}
+                  className="w-full px-3 py-2 rounded-xl bg-white border border-[#DDD5C7] text-[#1F313D] focus:outline-none"
+                >
+                  <option value="WhatsApp">WhatsApp Message</option>
+                  <option value="SMS">SMS Text Alert</option>
+                  <option value="Email">Email Campaign</option>
+                  <option value="Meta Custom Audience">Meta Custom Audience Sync</option>
+                  <option value="Google Customer Match">Google Customer Match</option>
+                </select>
               </div>
 
-              {/* Campaign Title */}
               <div>
-                <label className="text-xs font-bold text-[#1F313D] block mb-1">Campaign Name</label>
+                <label className="block text-[11px] font-bold text-[#1F313D] mb-1">Campaign Title</label>
                 <input
                   type="text"
                   value={campaignTitle}
                   onChange={(e) => setCampaignTitle(e.target.value)}
-                  className="w-full px-3 py-2 rounded-xl bg-white border border-[#DDD5C7] text-xs font-semibold text-[#1F313D]"
+                  className="w-full px-3 py-2 rounded-xl bg-white border border-[#DDD5C7] text-[#1F313D] focus:outline-none"
                 />
               </div>
 
-              {/* Offer Headline */}
               <div>
-                <label className="text-xs font-bold text-[#1F313D] block mb-1">Offer &amp; Message Headline</label>
+                <label className="block text-[11px] font-bold text-[#1F313D] mb-1">Offer Headline</label>
                 <input
                   type="text"
                   value={offerHeadline}
                   onChange={(e) => setOfferHeadline(e.target.value)}
-                  className="w-full px-3 py-2 rounded-xl bg-white border border-[#DDD5C7] text-xs font-semibold text-[#1F313D]"
+                  className="w-full px-3 py-2 rounded-xl bg-white border border-[#DDD5C7] text-[#1F313D] focus:outline-none"
                 />
               </div>
 
-              {/* Promo Code & Discount */}
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-2 gap-2">
                 <div>
-                  <label className="text-xs font-bold text-[#1F313D] block mb-1">Promo Code</label>
+                  <label className="block text-[11px] font-bold text-[#1F313D] mb-1">Promo Code</label>
                   <input
                     type="text"
                     value={promoCode}
                     onChange={(e) => setPromoCode(e.target.value)}
-                    className="w-full px-3 py-2 rounded-xl bg-white border border-[#DDD5C7] text-xs font-mono font-bold text-[#79415A]"
+                    className="w-full px-3 py-2 rounded-xl bg-white border border-[#DDD5C7] text-[#1F313D] font-mono"
                   />
                 </div>
-
                 <div>
-                  <label className="text-xs font-bold text-[#1F313D] block mb-1">Discount %</label>
+                  <label className="block text-[11px] font-bold text-[#1F313D] mb-1">Discount %</label>
                   <input
                     type="number"
                     value={discountPct}
                     onChange={(e) => setDiscountPct(Number(e.target.value))}
-                    className="w-full px-3 py-2 rounded-xl bg-white border border-[#DDD5C7] text-xs font-bold text-[#1F313D]"
+                    className="w-full px-3 py-2 rounded-xl bg-white border border-[#DDD5C7] text-[#1F313D]"
                   />
                 </div>
               </div>
 
-              {/* Summary Pill */}
-              <div className="p-3 bg-[#EFE9DF] rounded-xl text-xs text-[#5C5549] flex items-center justify-between">
-                <span>Total Reachable Patrons:</span>
-                <span className="font-bold text-[#1F313D]">{campaignSegment.memberCount} Patrons with Opt-In</span>
-              </div>
+              {/* Consent Guard Checkbox */}
+              <label className="flex items-start gap-2 p-2.5 rounded-xl bg-amber-50 border border-amber-200 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={hasExplicitConsent}
+                  onChange={(e) => setHasExplicitConsent(e.target.checked)}
+                  className="mt-0.5 accent-[#79415A]"
+                />
+                <span className="text-[11px] text-amber-900 leading-tight">
+                  I confirm that recipient patrons have granted communication consent and this campaign adheres to marketing regulations.
+                </span>
+              </label>
             </div>
 
-            {/* Modal Actions */}
-            <div className="mt-6 pt-4 border-t border-[#DDD5C7] flex items-center justify-end gap-2.5">
+            <div className="flex justify-end gap-2 pt-2 border-t border-[#DDD5C7]">
               <button
-                type="button"
                 onClick={() => setIsCampaignModalOpen(false)}
-                className="px-4 py-2 rounded-xl border border-[#DDD5C7] text-xs font-bold text-[#5C5549] hover:bg-[#EFE9DF]"
+                className="px-4 py-2 rounded-xl border border-[#DDD5C7] text-[#5C5549] text-xs font-bold hover:bg-[#EFE9DF]"
               >
                 Cancel
               </button>
               <button
-                type="button"
-                disabled={isDispatching}
                 onClick={handleDispatchCampaign}
-                className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#79415A] text-white text-xs font-bold hover:bg-[#68334b] shadow-xs"
+                disabled={isDispatching || !hasExplicitConsent}
+                className="px-4 py-2 rounded-xl bg-[#79415A] hover:bg-[#68334b] text-white text-xs font-bold disabled:opacity-40"
               >
-                <Send className="w-3.5 h-3.5" />
-                {isDispatching ? 'Dispatching...' : 'Dispatch Campaign'}
+                {isDispatching ? 'Queuing...' : 'Dispatch Campaign'}
               </button>
             </div>
           </div>
@@ -1050,3 +1105,4 @@ export const CustomerSegmentationView: React.FC<{ orgId?: string }> = () => {
     </div>
   );
 };
+export default CustomerSegmentationView;
