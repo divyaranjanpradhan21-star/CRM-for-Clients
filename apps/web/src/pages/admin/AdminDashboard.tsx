@@ -13,6 +13,8 @@ import { LeadManagementView } from './LeadManagementView';
 import { ReservationManagementView } from './ReservationManagementView';
 import { TableManagementView } from './TableManagementView';
 import { OrderManagementView } from './OrderManagementView';
+import { MenuManagementView } from './MenuManagementView';
+import { BillingPaymentView } from './BillingPaymentView';
 import { OrdersLivePOSView } from './OrdersLivePOSView';
 import { MenuPerformanceView } from './MenuPerformanceView';
 import { StaffRosterView } from './StaffRosterView';
@@ -115,7 +117,7 @@ export const AdminDashboard: React.FC = () => {
 
   // Navigation tab
   const [activeTab, setActiveTab] = useState<
-    'overview' | 'branches' | 'employees' | 'roles' | 'settings' | 'customers' | 'segments' | 'leads' | 'orders' | 'reservations' | 'tables' | 'menu' | 'staff' | 'campaigns' | 'feedback'
+    'overview' | 'branches' | 'employees' | 'roles' | 'settings' | 'customers' | 'segments' | 'leads' | 'orders' | 'reservations' | 'tables' | 'menu' | 'billing' | 'staff' | 'campaigns' | 'feedback'
   >(
     location.pathname.includes('branches')
       ? 'branches'
@@ -487,7 +489,8 @@ export const AdminDashboard: React.FC = () => {
                   { id: 'reservations', label: 'Table Reservations', icon: Calendar, badge: m.pendingReservations > 0 ? `${m.pendingReservations} new` : undefined },
                   { id: 'tables', label: 'Table Management', icon: LayoutGrid, badge: 'Floor Map' },
                   { id: 'orders', label: 'Order Management', icon: Receipt, badge: `${m.ordersReceived + m.ordersPreparing} live` },
-                  { id: 'menu', label: 'Menu Performance', icon: UtensilsCrossed },
+                  { id: 'billing', label: 'Billing & Payments', icon: CreditCard, badge: 'POS Pay' },
+                  { id: 'menu', label: 'Menu Management', icon: UtensilsCrossed, badge: 'Catalog' },
                   { id: 'staff', label: 'Staff Roster & Score', icon: Award },
                   { id: 'campaigns', label: 'Marketing Campaigns', icon: Megaphone, badge: `${m.activeCampaignsCount} live` },
                   { id: 'feedback', label: 'Complaints & Feedback', icon: MessageSquareWarning, badge: m.pendingComplaints > 0 ? `${m.pendingComplaints} open` : undefined },
@@ -591,8 +594,10 @@ export const AdminDashboard: React.FC = () => {
               />
             ) : activeTab === 'orders' ? (
               <OrderManagementView orgId={orgId} />
+            ) : activeTab === 'billing' ? (
+              <BillingPaymentView orgId={orgId} userRole={currentUser?.role} />
             ) : activeTab === 'menu' ? (
-              <MenuPerformanceView orgId={orgId} />
+              <MenuManagementView orgId={orgId} userRole={currentUser?.role} />
             ) : activeTab === 'staff' ? (
               <StaffRosterView orgId={orgId} />
             ) : activeTab === 'campaigns' ? (
