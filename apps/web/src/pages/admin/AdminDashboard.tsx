@@ -11,6 +11,11 @@ import { CustomerManagementView } from './CustomerManagementView';
 import { CustomerSegmentationView } from './CustomerSegmentationView';
 import { LeadManagementView } from './LeadManagementView';
 import { ReservationManagementView } from './ReservationManagementView';
+import { OrdersLivePOSView } from './OrdersLivePOSView';
+import { MenuPerformanceView } from './MenuPerformanceView';
+import { StaffRosterView } from './StaffRosterView';
+import { MarketingCampaignsView } from './MarketingCampaignsView';
+import { ComplaintsFeedbackView } from './ComplaintsFeedbackView';
 import {
   LayoutDashboard,
   Receipt,
@@ -490,11 +495,6 @@ export const AdminDashboard: React.FC = () => {
                       key={item.id}
                       onClick={() => {
                         setActiveTab(item.id as any);
-                        if (item.id === 'orders') openDrillDown('orders', 'Order Transactions & Tickets', 'Realtime POS receipts');
-                        if (item.id === 'menu') openDrillDown('menu_items', 'Menu Items Performance', 'Sales and profitability');
-                        if (item.id === 'staff') openDrillDown('staff', 'Staff Shifts & Efficiency', 'Service crew analytics');
-                        if (item.id === 'campaigns') openDrillDown('campaigns', 'Active Marketing Campaigns', 'Conversions & ROI');
-                        if (item.id === 'feedback') openDrillDown('complaints', 'Pending Complaints & Feedback', 'Unresolved issues');
                       }}
                       className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-2xl text-xs font-semibold transition-all ${
                         isActive
@@ -581,6 +581,16 @@ export const AdminDashboard: React.FC = () => {
               <ReservationManagementView
                 orgId={orgId}
               />
+            ) : activeTab === 'orders' ? (
+              <OrdersLivePOSView orgId={orgId} />
+            ) : activeTab === 'menu' ? (
+              <MenuPerformanceView orgId={orgId} />
+            ) : activeTab === 'staff' ? (
+              <StaffRosterView orgId={orgId} />
+            ) : activeTab === 'campaigns' ? (
+              <MarketingCampaignsView orgId={orgId} />
+            ) : activeTab === 'feedback' ? (
+              <ComplaintsFeedbackView orgId={orgId} />
             ) : (
               <>
             {/* ── SECTION 1: TOP 4 HERO KPI CARDS WITH DIRECT NAVIGATION ── */}
