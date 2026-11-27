@@ -11,6 +11,8 @@ import { CustomerManagementView } from './CustomerManagementView';
 import { CustomerSegmentationView } from './CustomerSegmentationView';
 import { LeadManagementView } from './LeadManagementView';
 import { ReservationManagementView } from './ReservationManagementView';
+import { TableManagementView } from './TableManagementView';
+import { OrderManagementView } from './OrderManagementView';
 import { OrdersLivePOSView } from './OrdersLivePOSView';
 import { MenuPerformanceView } from './MenuPerformanceView';
 import { StaffRosterView } from './StaffRosterView';
@@ -61,7 +63,8 @@ import {
   Check,
   Coffee,
   HelpCircle,
-  ShieldCheck
+  ShieldCheck,
+  LayoutGrid
 } from 'lucide-react';
 import {
   fetchAdminDashboardMetrics,
@@ -112,7 +115,7 @@ export const AdminDashboard: React.FC = () => {
 
   // Navigation tab
   const [activeTab, setActiveTab] = useState<
-    'overview' | 'branches' | 'employees' | 'roles' | 'settings' | 'customers' | 'segments' | 'leads' | 'orders' | 'reservations' | 'menu' | 'staff' | 'campaigns' | 'feedback'
+    'overview' | 'branches' | 'employees' | 'roles' | 'settings' | 'customers' | 'segments' | 'leads' | 'orders' | 'reservations' | 'tables' | 'menu' | 'staff' | 'campaigns' | 'feedback'
   >(
     location.pathname.includes('branches')
       ? 'branches'
@@ -482,7 +485,8 @@ export const AdminDashboard: React.FC = () => {
                   { id: 'segments', label: 'Customer Segments', icon: SlidersHorizontal, badge: '8 cohorts' },
                   { id: 'leads', label: 'Inbound Leads & Sales', icon: UserPlus, badge: '7 active' },
                   { id: 'reservations', label: 'Table Reservations', icon: Calendar, badge: m.pendingReservations > 0 ? `${m.pendingReservations} new` : undefined },
-                  { id: 'orders', label: 'Orders & Live POS', icon: Receipt, badge: `${m.ordersReceived + m.ordersPreparing} live` },
+                  { id: 'tables', label: 'Table Management', icon: LayoutGrid, badge: 'Floor Map' },
+                  { id: 'orders', label: 'Order Management', icon: Receipt, badge: `${m.ordersReceived + m.ordersPreparing} live` },
                   { id: 'menu', label: 'Menu Performance', icon: UtensilsCrossed },
                   { id: 'staff', label: 'Staff Roster & Score', icon: Award },
                   { id: 'campaigns', label: 'Marketing Campaigns', icon: Megaphone, badge: `${m.activeCampaignsCount} live` },
@@ -581,8 +585,12 @@ export const AdminDashboard: React.FC = () => {
               <ReservationManagementView
                 orgId={orgId}
               />
+            ) : activeTab === 'tables' ? (
+              <TableManagementView
+                orgId={orgId}
+              />
             ) : activeTab === 'orders' ? (
-              <OrdersLivePOSView orgId={orgId} />
+              <OrderManagementView orgId={orgId} />
             ) : activeTab === 'menu' ? (
               <MenuPerformanceView orgId={orgId} />
             ) : activeTab === 'staff' ? (
