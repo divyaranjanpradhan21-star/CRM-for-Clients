@@ -57,6 +57,8 @@ import {
   importCustomersFromCSV,
   exportCustomersToCSV
 } from '../../lib/customerManagementApi';
+import { loadLoyaltyAccounts, loadLoyaltyTransactions } from '../../lib/loyaltyRewardsApi';
+import { getActiveMembershipForCustomer } from '../../lib/membershipManagementApi';
 
 const DIETARY_OPTIONS = [
   'Vegetarian',
@@ -1191,21 +1193,123 @@ export const CustomerManagementView: React.FC<{ orgId?: string }> = () => {
             </div>
           )}
 
-          {/* Tab 5: Loyalty Points */}
-          {activeDetailTab === 'loyalty' && (
-            <div className="p-4 rounded-2xl bg-[#EFE9DF] border border-[#DDD5C7] space-y-3 text-xs">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h4 className="font-bold text-sm text-[#1F313D]">Loyalty Rewards Ledger</h4>
-                  <p className="text-[#7A7268] text-[11px]">Current Tier: <strong>{selectedCustomer.loyaltyTier}</strong></p>
+          {/* Tab 5: Loyalty Points & Membership Integration */}
+          {activeDetailTab === 'loyalty' && (() => {
+            const loyaltyAccounts = loadLoyaltyAccounts();
+            const lAcc = loyaltyAccounts.find(a => a.customerId === selectedCustomer.id || a.customerPhone === selectedCustomer.mobile);
+            const allTxns = loadLoyaltyTransactions();
+            const customerTxns = allTxns.filter(t => t.customerId === selectedCustomer.id || (lAcc && t.accountId === lAcc.id));
+            const activeMember = getActiveMembershipForCustomer(selectedCustomer.id);
+
+            return (
+              <div className="space-y-4 text-xs">
+                {/* 1. Loyalty Account Summary Card */}
+                <div className="p-4 rounded-2xl bg-[#EFE9DF] border border-[#DDD5C7] space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <h4 className="font-bold text-sm text-[#1F313D]">Loyalty Rewards Account</h4>
+                        <span className="font-mono text-[10px] px-2 py-0.5 rounded-full bg-white text-[#79415A] font-bold">
+                          {lAcc ? lAcc.id : 'Auto-Enrolled'}
+                        </span>
+                      </div>
+                      <p className="text-[#7A7268] text-[11px] mt-0.5">
+                        Tier Status: <strong className="text-[#79415A]">{lAcc ? lAcc.tier : selectedCustomer.loyaltyTier} Tier</strong>
+                      </p>
+                    </div>
+                    <div className="text-right">
+                      <span className="text-2xl font-black font-mono text-[#79415A]">
+                        {lAcc ? lAcc.currentPoints : selectedCustomer.loyaltyPoints}
+                      </span>
+                      <span className="text-[10px] text-[#7A7268] block">Available Points (≈ ₹{(lAcc ? lAcc.currentPoints : selectedCustomer.loyaltyPoints).toFixed(2)})</span>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 pt-2 border-t border-[#DDD5C7]/70 text-[11px]">
+                    <div className="p-2.5 rounded-xl bg-white/70">
+                      <span className="text-[#7A7268] block text-[10px]">Lifetime Earned</span>
+                      <strong className="text-[#1F313D] font-mono">{lAcc ? lAcc.lifetimeEarned : selectedCustomer.loyaltyPoints} pts</strong>
+                    </div>
+                    <div className="p-2.5 rounded-xl bg-white/70">
+                      <span className="text-[#7A7268] block text-[10px]">Lifetime Redeemed</span>
+                      <strong className="text-[#82401D] font-mono">{lAcc ? lAcc.lifetimeRedeemed : 0} pts</strong>
+                    </div>
+                    <div className="p-2.5 rounded-xl bg-white/70">
+                      <span className="text-[#7A7268] block text-[10px]">Points Expiry</span>
+                      <strong className="text-[#1F313D]">{lAcc?.expiryDate ? new Date(lAcc.expiryDate).toLocaleDateString() : 'Never'}</strong>
+                    </div>
+                  </div>
                 </div>
-                <div className="text-right">
-                  <span className="text-xl font-bold font-mono text-[#79415A]">{selectedCustomer.loyaltyPoints}</span>
-                  <span className="text-[10px] text-[#7A7268] block">Available Points</span>
+
+                {/* 2. Membership Subscription Integration */}
+                <div className="p-4 rounded-2xl bg-[#EFE9DF] border border-[#DDD5C7] space-y-2">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Crown className="w-4 h-4 text-[#82401D]" />
+                      <h4 className="font-bold text-sm text-[#1F313D]">Membership Subscription</h4>
+                    </div>
+                    <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                      activeMember ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-200 text-slate-700'
+                    }`}>
+                      {activeMember ? 'Active Subscription' : 'No Active Plan'}
+                    </span>
+                  </div>
+
+                  {activeMember ? (
+                    <div className="space-y-2 text-[11px]">
+                      <div className="flex justify-between items-center p-2.5 rounded-xl bg-white/80 border border-[#DDD5C7]">
+                        <div>
+                          <strong className="text-[#1F313D] block">{activeMember.planName}</strong>
+                          <span className="font-mono text-[10px] text-[#7A7268]">Card: {activeMember.membershipNumber}</span>
+                        </div>
+                        <div className="text-right">
+                          <span className="text-emerald-700 font-bold block">{activeMember.discountPercentage}% Discount on Bills</span>
+                          <span className="text-[#82401D] font-semibold text-[10px]">{activeMember.loyaltyMultiplier}x Loyalty Points</span>
+                        </div>
+                      </div>
+                      <span className="text-[10px] text-[#7A7268] block">
+                        Valid until: <strong>{new Date(activeMember.expiryDate).toLocaleDateString()}</strong> (Renewals: {activeMember.renewalCount})
+                      </span>
+                    </div>
+                  ) : (
+                    <p className="text-[#7A7268] text-[11px]">
+                      This customer is not currently enrolled in a Silver, Gold, or Platinum Membership club.
+                    </p>
+                  )}
+                </div>
+
+                {/* 3. Transaction History */}
+                <div className="space-y-2">
+                  <h4 className="font-bold text-xs text-[#1F313D]">Points Activity Ledger ({customerTxns.length})</h4>
+                  {customerTxns.length === 0 ? (
+                    <div className="p-4 text-center text-[#7A7268] bg-[#EFE9DF] rounded-xl border border-[#DDD5C7]">
+                      No point transactions recorded yet. Points will be automatically credited upon checkout.
+                    </div>
+                  ) : (
+                    <div className="space-y-1.5 max-h-48 overflow-y-auto">
+                      {customerTxns.map(t => (
+                        <div key={t.id} className="p-2.5 rounded-xl bg-white/80 border border-[#DDD5C7] flex items-center justify-between">
+                          <div>
+                            <div className="flex items-center gap-2">
+                              <span className="font-bold text-[#1F313D]">{t.type}</span>
+                              <span className="text-[10px] font-mono text-[#7A7268]">{t.id}</span>
+                            </div>
+                            <span className="text-[10px] text-[#7A7268] block">{t.notes}</span>
+                          </div>
+                          <div className="text-right">
+                            <span className={`font-mono font-black text-xs ${t.points > 0 ? 'text-emerald-700' : 'text-rose-700'}`}>
+                              {t.points > 0 ? `+${t.points}` : t.points}
+                            </span>
+                            <span className="text-[9px] text-[#7A7268] block">{new Date(t.createdAt).toLocaleDateString()}</span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               </div>
-            </div>
-          )}
+            );
+          })()}
 
           {/* Tab 6: Communications & Logs */}
           {activeDetailTab === 'comms' && (

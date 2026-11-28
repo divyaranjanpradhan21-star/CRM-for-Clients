@@ -15,6 +15,8 @@ import { TableManagementView } from './TableManagementView';
 import { OrderManagementView } from './OrderManagementView';
 import { MenuManagementView } from './MenuManagementView';
 import { BillingPaymentView } from './BillingPaymentView';
+import { LoyaltyRewardsView } from './LoyaltyRewardsView';
+import { MembershipManagementView } from './MembershipManagementView';
 import { OrdersLivePOSView } from './OrdersLivePOSView';
 import { MenuPerformanceView } from './MenuPerformanceView';
 import { StaffRosterView } from './StaffRosterView';
@@ -117,7 +119,7 @@ export const AdminDashboard: React.FC = () => {
 
   // Navigation tab
   const [activeTab, setActiveTab] = useState<
-    'overview' | 'branches' | 'employees' | 'roles' | 'settings' | 'customers' | 'segments' | 'leads' | 'orders' | 'reservations' | 'tables' | 'menu' | 'billing' | 'staff' | 'campaigns' | 'feedback'
+    'overview' | 'branches' | 'employees' | 'roles' | 'settings' | 'customers' | 'loyalty' | 'memberships' | 'segments' | 'leads' | 'orders' | 'reservations' | 'tables' | 'menu' | 'billing' | 'staff' | 'campaigns' | 'feedback'
   >(
     location.pathname.includes('branches')
       ? 'branches'
@@ -280,7 +282,7 @@ export const AdminDashboard: React.FC = () => {
             {/* Logo Stamp */}
             <Link to="/" title="Cafe's Corner" className="flex items-center gap-3 group">
               <div className="w-10 h-10 rounded-full bg-[#FAF7F2] border border-[#DDD5C7] p-1 flex items-center justify-center shadow-xs group-hover:scale-105 transition-transform">
-                <Coffee className="w-5 h-5 text-[#82401D]" />
+                <img src="/logo.png" alt="Corner Cafe" className="w-full h-full object-contain" />
               </div>
               <div>
                 <span className="font-serif font-black text-lg text-[#1F313D] tracking-tight block leading-none">
@@ -484,6 +486,8 @@ export const AdminDashboard: React.FC = () => {
                   { id: 'roles', label: 'Roles & Permissions', icon: ShieldCheck },
                   { id: 'settings', label: 'Restaurant Settings', icon: Settings },
                   { id: 'customers', label: 'Patrons & Retention', icon: Users, badge: m.totalCustomers.toLocaleString() },
+                  { id: 'loyalty', label: 'Loyalty & Rewards', icon: Award, badge: 'Rewards' },
+                  { id: 'memberships', label: 'Membership Plans', icon: Crown, badge: 'Clubs' },
                   { id: 'segments', label: 'Customer Segments', icon: SlidersHorizontal, badge: '8 cohorts' },
                   { id: 'leads', label: 'Inbound Leads & Sales', icon: UserPlus, badge: '7 active' },
                   { id: 'reservations', label: 'Table Reservations', icon: Calendar, badge: m.pendingReservations > 0 ? `${m.pendingReservations} new` : undefined },
@@ -598,6 +602,10 @@ export const AdminDashboard: React.FC = () => {
               <BillingPaymentView orgId={orgId} userRole={currentUser?.role} />
             ) : activeTab === 'menu' ? (
               <MenuManagementView orgId={orgId} userRole={currentUser?.role} />
+            ) : activeTab === 'loyalty' ? (
+              <LoyaltyRewardsView orgId={orgId} userRole={currentUser?.role} />
+            ) : activeTab === 'memberships' ? (
+              <MembershipManagementView orgId={orgId} userRole={currentUser?.role} />
             ) : activeTab === 'staff' ? (
               <StaffRosterView orgId={orgId} />
             ) : activeTab === 'campaigns' ? (

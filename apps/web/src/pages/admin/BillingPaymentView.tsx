@@ -4,7 +4,7 @@ import {
   CheckCircle2, XCircle, AlertTriangle, RefreshCw, ChevronRight,
   Eye, FileText, ArrowUpRight, RotateCcw, Share2, Copy,
   QrCode, Smartphone, Banknote, ShieldCheck, History, Check,
-  X, Layers, Calendar, Landmark, Plus
+  X, Layers, Calendar, Landmark, Plus, Award
 } from 'lucide-react';
 import {
   Invoice, InvoiceStatus, PaymentMethod, PaymentTransaction, BillingMetrics,
@@ -13,6 +13,8 @@ import {
   generateDigitalReceiptText, exportInvoicesCSV, generateInvoiceForOrder
 } from '../../lib/billingPaymentApi';
 import { loadOrders, OrderRecord } from '../../lib/orderManagementApi';
+import { loadLoyaltyAccounts, redeemLoyaltyPointsForInvoice } from '../../lib/loyaltyRewardsApi';
+import { getActiveMembershipForCustomer } from '../../lib/membershipManagementApi';
 
 interface BillingPaymentViewProps {
   orgId?: string;
@@ -678,6 +680,59 @@ export const BillingPaymentView: React.FC<BillingPaymentViewProps> = ({ userRole
                 <X className="w-5 h-5" />
               </button>
             </div>
+
+            {/* Customer Loyalty & Membership Privileges (FR-LOY-006, FR-MEM-005) */}
+            {(() => {
+              const loyaltyAccounts = loadLoyaltyAccounts();
+              const lAcc = loyaltyAccounts.find(a => (selectedInvoice.customerId && a.customerId === selectedInvoice.customerId) || (selectedInvoice.customerPhone && a.customerPhone === selectedInvoice.customerPhone));
+              const activeMember = selectedInvoice.customerId ? getActiveMembershipForCustomer(selectedInvoice.customerId) : null;
+              
+              if (!lAcc && !activeMember) return null;
+              return (
+                <div className="p-3 bg-amber-50/80 rounded-2xl border border-amber-200/80 space-y-2 text-xs">
+                  <div className="flex items-center justify-between">
+                    <span className="font-bold text-[#82401D] flex items-center gap-1.5">
+                      <Award className="w-4 h-4 text-[#82401D]" /> Patron Club Privileges
+                    </span>
+                    {activeMember && (
+                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-200 text-amber-900">
+                        {activeMember.planName} ({activeMember.discountPercentage}% OFF)
+                      </span>
+                    )}
+                  </div>
+                  {lAcc && lAcc.currentPoints >= 50 && (
+                    <div className="flex items-center justify-between pt-1 border-t border-amber-200 text-[11px]">
+                      <div>
+                        <span className="text-[#5C5549]">Available: <strong>{lAcc.currentPoints} pts</strong> (₹{lAcc.currentPoints} value)</span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const ptsToRedeem = Math.min(lAcc.currentPoints, Math.floor(payAmount));
+                          const res = redeemLoyaltyPointsForInvoice({
+                            invoiceId: selectedInvoice.id,
+                            customerId: lAcc.customerId,
+                            pointsToRedeem: ptsToRedeem,
+                            billSubtotal: selectedInvoice.totalAmount,
+                            performer: 'POS Cashier'
+                          });
+                          if (res.success) {
+                            setPayAmount(Math.max(0, payAmount - res.discountAmount));
+                            alert(res.message);
+                            refreshData();
+                          } else {
+                            alert(res.message);
+                          }
+                        }}
+                        className="px-2.5 py-1 rounded-lg bg-[#82401D] text-white font-bold text-[10px] hover:bg-[#68334b] transition"
+                      >
+                        Redeem Points (₹{Math.min(lAcc.currentPoints, Math.floor(payAmount))})
+                      </button>
+                    </div>
+                  )}
+                </div>
+              );
+            })()}
 
             <form onSubmit={handleSubmitPayment} className="space-y-3">
               {/* Split Toggle */}

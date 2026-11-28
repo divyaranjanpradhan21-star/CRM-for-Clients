@@ -1,5 +1,7 @@
 import { supabase } from './supabase';
 import { OrderRecord, loadOrders, updateOrderStatus } from './orderManagementApi';
+import { awardLoyaltyPointsForPurchase, reverseLoyaltyPointsForRefund } from './loyaltyRewardsApi';
+import { getActiveMembershipForCustomer } from './membershipManagementApi';
 
 // ─── TYPES ───────────────────────────────────────────────────────────────────
 
@@ -431,7 +433,20 @@ export function generateInvoiceForOrder(
 
   const invoiceNumber = generateNextInvoiceNumber();
   const subtotal = order.subtotal;
-  const discountAmount = order.discountAmount || 0;
+  let discountAmount = order.discountAmount || 0;
+  let discountReason = order.couponCode ? `Coupon: ${order.couponCode}` : undefined;
+
+  // FR-MEM-005: Auto-apply active membership discount if no manual coupon discount was provided
+  if (discountAmount === 0 && order.customerId) {
+    try {
+      const activeMember = getActiveMembershipForCustomer(order.customerId);
+      if (activeMember && activeMember.discountPercentage > 0) {
+        discountAmount = parseFloat(((subtotal * activeMember.discountPercentage) / 100).toFixed(2));
+        discountReason = `${activeMember.planName} (${activeMember.discountPercentage}% Privilege)`;
+      }
+    } catch {}
+  }
+
   const taxable = Math.max(0, subtotal - discountAmount);
   const cgst = parseFloat(((taxable * 2.5) / 100).toFixed(2));
   const sgst = parseFloat(((taxable * 2.5) / 100).toFixed(2));
@@ -467,7 +482,7 @@ export function generateInvoiceForOrder(
     subtotal,
     discountType: order.discountType,
     discountAmount,
-    discountReason: order.couponCode ? `Coupon: ${order.couponCode}` : undefined,
+    discountReason,
     serviceChargeAmount: 0,
     cgst,
     sgst,
@@ -605,6 +620,26 @@ export function recordPayment(
     } catch {}
   }
 
+  // FR-LOY-003: Award qualifying loyalty points on successful settlement
+  if (isFullySettled && (inv.customerId || inv.customerPhone)) {
+    try {
+      const activeMember = inv.customerId ? getActiveMembershipForCustomer(inv.customerId) : null;
+      awardLoyaltyPointsForPurchase({
+        invoiceId: inv.id,
+        orderId: inv.orderId,
+        orderNumber: inv.orderNumber,
+        customerId: inv.customerId || `CUST-${inv.customerPhone.replace(/\D/g, '').slice(-5)}`,
+        customerName: inv.customerName,
+        customerPhone: inv.customerPhone,
+        customerEmail: inv.customerEmail,
+        amountSpent: inv.totalAmount,
+        branchName: inv.branchName,
+        membershipMultiplierBonus: activeMember ? activeMember.loyaltyMultiplier : 1.0,
+        performer
+      });
+    } catch {}
+  }
+
   return updated;
 }
 
@@ -698,6 +733,17 @@ export function processInvoiceRefund(
     reconciliationStatus: 'Matched'
   });
   savePaymentTransactions(txns);
+
+  // FR-LOY-010: Automatically reverse awarded loyalty points for refund
+  try {
+    reverseLoyaltyPointsForRefund({
+      referenceId: inv.id,
+      customerId: inv.customerId || `CUST-${inv.customerPhone?.replace(/\D/g, '').slice(-5)}`,
+      refundAmount: refundData.amount,
+      reason: refundData.reason,
+      performer: refundData.approvedBy
+    });
+  } catch {}
 
   return updated;
 }
